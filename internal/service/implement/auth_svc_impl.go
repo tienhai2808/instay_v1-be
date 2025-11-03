@@ -2,6 +2,7 @@ package implement
 
 import (
 	"context"
+	"errors"
 
 	"github.com/InstaySystem/is-be/internal/common"
 	"github.com/InstaySystem/is-be/internal/config"
@@ -59,4 +60,51 @@ func (s *authSvcImpl) Login(ctx context.Context, req types.LoginRequest) (*model
 	}
 
 	return user, accessToken, refreshToken, nil
+}
+
+func (s *authSvcImpl) RefreshToken(userID int64, userRole string) (string, string, error) {
+	accessToken, err := s.jwtProvider.GenerateToken(userID, userRole, s.cfg.JWT.AccessExpiresIn)
+	if err != nil {
+		s.logger.Error("generate access token failed", zap.Error(err))
+		return "", "", err
+	}
+
+	refreshToken, err := s.jwtProvider.GenerateToken(userID, userRole, s.cfg.JWT.RefreshExpiresIn)
+	if err != nil {
+		s.logger.Error("generate refresh token failed", zap.Error(err))
+		return "", "", err
+	}
+
+	return accessToken, refreshToken, nil
+}
+
+func (s *authSvcImpl) ChangePassword(ctx context.Context, userID int64, req types.ChangePasswordRequest) error {
+	user, err := s.userRepo.FindByID(ctx, userID)
+	if err != nil {
+		s.logger.Error("find user by id failed", zap.Int64("id", userID), zap.Error(err))
+		return err
+	}
+	if user == nil {
+		return common.ErrUnAuth
+	}
+
+	if err = s.bHash.VerifyPassword(req.OldPassword, user.Password); err != nil {
+		return common.ErrIncorrectPassword
+	}
+
+	hashedPass, err := s.bHash.HashPassword(req.NewPassword)
+	if err != nil {
+		s.logger.Error("hash password failed", zap.Error(err))
+		return err
+	}
+
+	if err = s.userRepo.Update(ctx, userID, map[string]any{"password": hashedPass}); err != nil {
+		if errors.Is(err, common.ErrUserNotFound) {
+			return common.ErrUnAuth
+		}
+		s.logger.Error("update user failed", zap.Int64("id", userID), zap.Error(err))
+		return err
+	}
+
+	return nil
 }

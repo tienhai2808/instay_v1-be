@@ -18,3 +18,8 @@ type LoginRequest struct {
 	Username string `json:"username" binding:"required,min=5"`
 	Password string `json:"password" binding:"required,min=6"`
 }
+
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required,min=6"`
+	NewPassword string `json:"new_password" binding:"required,min=6"`
+}

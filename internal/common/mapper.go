@@ -16,3 +16,15 @@ func ToUserResponse(user *model.User) *types.UserResponse {
 		CreatedAt: user.CreatedAt,
 	}
 }
+
+func ToUserData(user *model.User) *types.UserData {
+	return &types.UserData{
+		ID: user.ID,
+		Email: user.Email,
+		Username: user.Username,
+		FirstName: user.FirstName,
+		LastName: user.LastName,
+		Role: user.Role,
+		CreatedAt: user.CreatedAt,
+	}
+}

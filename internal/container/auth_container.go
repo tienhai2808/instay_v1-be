@@ -15,7 +15,13 @@ type AuthContainer struct {
 	Hdl *handler.AuthHandler
 }
 
-func NewAuthContainer(cfg *config.Config, db *gorm.DB, logger *zap.Logger, bHash bcrypt.Hasher, jwtProvider jwt.JWTProvider) *AuthContainer {
+func NewAuthContainer(
+	cfg *config.Config,
+	db *gorm.DB,
+	logger *zap.Logger,
+	bHash bcrypt.Hasher,
+	jwtProvider jwt.JWTProvider,
+) *AuthContainer {
 	userRepo := repoImpl.NewUserRepository(db)
 	svc := svcImpl.NewAuthService(userRepo, logger, bHash, jwtProvider, cfg)
 	hdl := handler.NewAuthHandler(svc, cfg)

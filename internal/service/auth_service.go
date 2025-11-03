@@ -9,4 +9,8 @@ import (
 
 type AuthService interface {
 	Login(ctx context.Context, req types.LoginRequest) (*model.User, string, string, error)
+
+	RefreshToken(userID int64, userRole string) (string, string, error)
+
+	ChangePassword(ctx context.Context, userID int64, req types.ChangePasswordRequest) error
 }

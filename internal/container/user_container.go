@@ -2,6 +2,7 @@ package container
 
 import (
 	"github.com/InstaySystem/is-be/internal/handler"
+	"github.com/InstaySystem/is-be/internal/repository"
 	repoImpl "github.com/InstaySystem/is-be/internal/repository/implement"
 	svcImpl "github.com/InstaySystem/is-be/internal/service/implement"
 	"github.com/InstaySystem/is-be/pkg/bcrypt"
@@ -11,13 +12,22 @@ import (
 )
 
 type UserContainer struct {
-	Hdl *handler.UserHandler
+	Hdl  *handler.UserHandler
+	Repo repository.UserRepository
 }
 
-func NewUserContainer(db *gorm.DB, sfGen snowflake.Generator, logger *zap.Logger, bHash bcrypt.Hasher) *UserContainer {
+func NewUserContainer(
+	db *gorm.DB,
+	sfGen snowflake.Generator,
+	logger *zap.Logger,
+	bHash bcrypt.Hasher,
+) *UserContainer {
 	repo := repoImpl.NewUserRepository(db)
 	svc := svcImpl.NewUserService(repo, sfGen, logger, bHash)
 	hdl := handler.NewUserHandler(svc)
 
-	return &UserContainer{hdl}
+	return &UserContainer{
+		hdl,
+		repo,
+	}
 }

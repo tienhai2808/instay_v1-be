@@ -11,7 +11,7 @@ import (
 type JWTProvider interface {
 	GenerateToken(userID int64, userRole string, ttl time.Duration) (string, error)
 
-	ParseToken(token string) (int64, string, error)
+	ParseToken(tokenStr string) (int64, string, error)
 }
 
 type jwtProviderImpl struct {
