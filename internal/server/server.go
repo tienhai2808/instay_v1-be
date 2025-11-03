@@ -13,6 +13,7 @@ import (
 	"github.com/InstaySystem/is-be/internal/container"
 	"github.com/InstaySystem/is-be/internal/initialization"
 	"github.com/InstaySystem/is-be/internal/router"
+	"github.com/InstaySystem/is-be/internal/worker"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -59,7 +60,10 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	ctn := container.NewContainer(cfg, db.Gorm, s3, sf, logger)
+	ctn := container.NewContainer(cfg, db.Gorm, rdb, s3, sf, logger, mq.Conn, mq.Chan)
+
+	emailWorker := worker.NewEmailWorker(ctn.MQProvider, ctn.SMTPProvider, logger)
+	go emailWorker.StartSendAuthEmail()
 
 	r := gin.Default()
 	if err = r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {

@@ -1,7 +1,6 @@
 package initialization
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/sony/sonyflake/v2"
@@ -17,7 +16,7 @@ func InitSnowFlake() (*sonyflake.Sonyflake, error) {
 
 	sf, err := sonyflake.New(st)
 	if err != nil {
-		return nil, fmt.Errorf("snowflake initialization failed: %w", err)
+		return nil, err
 	}
 
 	return sf, nil

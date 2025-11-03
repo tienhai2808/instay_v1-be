@@ -18,5 +18,11 @@ func AuthRouter(rg *gin.RouterGroup, hdl *handler.AuthHandler, authMid *middlewa
 		auth.GET("/me", authMid.IsAuthentication(), hdl.GetMe)
 
 		auth.POST("/change-password", authMid.IsAuthentication(), hdl.ChangePassword)
+
+		auth.POST("/forgot-password", hdl.ForgotPassword)
+
+		auth.POST("/forgot-password/verify", hdl.VerifyForgotPassword)
+
+		auth.POST("/reset-password", hdl.ResetPassword)
 	}
 } 

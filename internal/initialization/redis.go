@@ -18,7 +18,7 @@ func InitRedis(cfg *config.Config) (*redis.Client, error) {
 	})
 
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		return nil, fmt.Errorf("connect to Redis failed: %v", err)
+		return nil, err
 	}
 
 	return rdb, nil

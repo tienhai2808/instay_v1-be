@@ -11,7 +11,7 @@ var (
 
 	ErrLoginFailed = errors.New("incorrect username or password")
 
-	ErrInvalidToken = errors.New("invalid token")
+	ErrInvalidToken = errors.New("invalid or expired token")
 
 	ErrUnAuth = errors.New("unauthorized")
 
@@ -20,4 +20,8 @@ var (
 	ErrForbidden = errors.New("forbidden")
 
 	ErrIncorrectPassword = errors.New("incorrect password")
+
+	ErrTooManyAttempts = errors.New("too many attempts")
+
+	ErrInvalidOTP = errors.New("invalid or expired OTP")
 )

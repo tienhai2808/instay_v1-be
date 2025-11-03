@@ -49,6 +49,13 @@ type Config struct {
 		SecretAccessKey string `mapstructure:"secret_access_key"`
 		Region          string `mapstructure:"region"`
 	} `mapstructure:"s3"`
+
+	SMTP struct {
+		Host     string `mapstructure:"host"`
+		Port     int    `mapstructure:"port"`
+		User     string `mapstructure:"user"`
+		Password string `mapstructure:"password"`
+	} `mapstructure:"smtp"`
 }
 
 func LoadConfig() (*Config, error) {

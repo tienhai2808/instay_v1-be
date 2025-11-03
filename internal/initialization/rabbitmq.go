@@ -22,12 +22,12 @@ func InitRabbitMQ(cfg *config.Config) (*MQ, error) {
 
 	conn, err := amqp091.Dial(dsn)
 	if err != nil {
-		return nil, fmt.Errorf("connect to RabbitMQ failed: %w", err)
+		return nil, err
 	}
 
 	chann, err := conn.Channel()
 	if err != nil {
-		return nil, fmt.Errorf("open channel failed: %w", err)
+		return nil, err
 	}
 
 	return &MQ{

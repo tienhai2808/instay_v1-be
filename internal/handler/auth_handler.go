@@ -128,12 +128,12 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 
 	if err := h.authSvc.ChangePassword(ctx, user.ID, req); err != nil {
 		switch err {
-		case common.ErrUnAuth:
-			common.ToAPIResponse(c, http.StatusUnauthorized, err.Error(), nil)
+		case common.ErrUserNotFound:
+			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
 		case common.ErrIncorrectPassword:
 			common.ToAPIResponse(c, http.StatusBadRequest, err.Error(), nil)
 		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, err.Error(), nil)
+			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
 		}
 		return
 	}
@@ -142,4 +142,86 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	c.SetCookie(h.cfg.JWT.RefreshName, "", -1, fmt.Sprintf("%s/auth/refresh-token", h.cfg.Server.APIPrefix), "", false, true)
 
 	common.ToAPIResponse(c, http.StatusOK, "Password changed successfully", nil)
+}
+
+func (h *AuthHandler) ForgotPassword(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	var req types.ForgotPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		mess := common.HandleValidationError(err)
+		common.ToAPIResponse(c, http.StatusBadRequest, mess, nil)
+		return
+	}
+
+	forgotPasswordToken, err := h.authSvc.ForgotPassword(ctx, req.Email)
+	if err != nil {
+		switch err {
+		case common.ErrUserNotFound:
+			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
+		default:
+			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		}
+		return
+	}
+
+	common.ToAPIResponse(c, http.StatusOK, "Forgot password verification email has been sent, please check your inbox", gin.H{
+		"forgot_password_token": forgotPasswordToken,
+	})
+}
+
+func (h *AuthHandler) VerifyForgotPassword(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	var req types.VerifyForgotPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		mess := common.HandleValidationError(err)
+		common.ToAPIResponse(c, http.StatusBadRequest, mess, nil)
+		return
+	}
+
+	refreshPasswordToken, err := h.authSvc.VerifyForgotPassword(ctx, req)
+	if err != nil {
+		switch err {
+		case common.ErrInvalidOTP, common.ErrInvalidToken:
+			common.ToAPIResponse(c, http.StatusBadRequest, err.Error(), nil)
+		case common.ErrTooManyAttempts:
+			common.ToAPIResponse(c, http.StatusTooManyRequests, err.Error(), nil)
+		default:
+			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		}
+		return
+	}
+
+	common.ToAPIResponse(c, http.StatusOK, "Forgot password verification successful", gin.H{
+		"reset_password_token": refreshPasswordToken,
+	})
+}
+
+func (h *AuthHandler) ResetPassword(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	var req types.ResetPasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		mess := common.HandleValidationError(err)
+		common.ToAPIResponse(c, http.StatusBadRequest, mess, nil)
+		return
+	}
+
+	if err := h.authSvc.ResetPassword(ctx, req); err != nil {
+		switch err {
+		case common.ErrUserNotFound:
+			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
+		case common.ErrInvalidToken:
+			common.ToAPIResponse(c, http.StatusBadRequest, err.Error(), nil)
+		default:
+			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		}
+		return
+	}
+
+	common.ToAPIResponse(c, http.StatusOK, "Password reset successful", nil)
 }

@@ -11,3 +11,20 @@ type UserData struct {
 	LastName  string    `json:"last_name"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type AuthEmailData struct {
+	Subject string `json:"subject"`
+	Otp     string `json:"otp"`
+}
+
+type ForgotPasswordData struct {
+	Email    string `json:"email"`
+	Otp      string `json:"otp"`
+	Attempts int    `json:"attempts"`
+}
+
+type AuthEmailMessage struct {
+	To      string `json:"to"`
+	Subject string `json:"subject"`
+	Otp     string `json:"otp"`
+}

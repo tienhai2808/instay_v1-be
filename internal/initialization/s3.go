@@ -2,7 +2,6 @@ package initialization
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/InstaySystem/is-be/internal/config"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
@@ -28,7 +27,7 @@ func InitS3(cfg *config.Config) (*S3, error) {
 		awsConfig.WithCredentialsProvider(staticCredentials),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("s3 configuration load failed: %w", err)
+		return nil, err
 	}
 
 	client := s3.NewFromConfig(awsCfg)

@@ -30,16 +30,16 @@ func InitPostgreSQL(cfg *config.Config) (*DB, error) {
 	)
 	gDB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		return nil, fmt.Errorf("connect to PostgreSQL failed: %w", err)
+		return nil, err
 	}
 
 	if err := runAutoMigrations(gDB); err != nil {
-		return nil, fmt.Errorf("database migration failed: %w", err)
+		return nil, err
 	}
 
 	sqlDB, err := gDB.DB()
 	if err != nil {
-		return nil, fmt.Errorf("can't get sql.DB: %w", err)
+		return nil, err
 	}
 
 	return &DB{
