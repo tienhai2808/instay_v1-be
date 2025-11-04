@@ -68,3 +68,47 @@ func (s *userSvcImpl) CreateUser(ctx context.Context, req types.CreateUserReques
 
 	return id, nil
 }
+
+func (s *userSvcImpl) GetUserByID(ctx context.Context, id int64) (*model.User, error) {
+	user, err := s.userRepo.FindByID(ctx, id)
+	if err != nil {
+		s.logger.Error("find user by id failed", zap.Int64("id", id), zap.Error(err))
+		return nil, err
+	}
+	if user == nil {
+		return nil, common.ErrUserNotFound
+	}
+
+	return user, nil
+}
+
+func (s *userSvcImpl) GetUsers(ctx context.Context, query types.UserPaginationQuery) ([]*model.User, *types.MetaResponse, error) {
+	if query.Page == 0 {
+		query.Page = 1
+	}
+	if query.Limit == 0 {
+		query.Limit = 10
+	}
+
+	users, total, err := s.userRepo.FindAllPaginated(ctx, query)
+	if err != nil {
+		s.logger.Error("find all user paginated failed", zap.Error(err))
+		return nil, nil, err
+	}
+
+	totalPages := uint32(total) / query.Limit
+	if uint32(total)%query.Limit != 0 {
+		totalPages++
+	}
+
+	meta := &types.MetaResponse{
+		Total:      uint64(total),
+		Page:       query.Page,
+		Limit:      query.Limit,
+		TotalPages: uint16(totalPages),
+		HasPrev:    query.Page > 1,
+		HasNext:    query.Page < totalPages,
+	}
+
+	return users, meta, nil
+}

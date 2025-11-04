@@ -2,11 +2,14 @@ package implement
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"strings"
 
 	"github.com/InstaySystem/is-be/internal/common"
 	"github.com/InstaySystem/is-be/internal/model"
 	"github.com/InstaySystem/is-be/internal/repository"
+	"github.com/InstaySystem/is-be/internal/types"
 	"gorm.io/gorm"
 )
 
@@ -78,4 +81,63 @@ func (r *userRepoImpl) ExistsByEmail(ctx context.Context, email string) (bool, e
 	}
 
 	return count > 0, nil
+}
+
+func (r *userRepoImpl) FindAllPaginated(ctx context.Context, query types.UserPaginationQuery) ([]*model.User, int64, error) {
+	var users []*model.User
+	var total int64
+
+	db := r.db.WithContext(ctx).Model(&model.User{})
+	db = applyFilters(db, query)
+
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	db = applySorting(db, query)
+	offset := (query.Page - 1) * query.Limit
+	if err := db.Offset(int(offset)).Limit(int(query.Limit)).Find(&users).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return users, total, nil
+}
+
+func applyFilters(db *gorm.DB, query types.UserPaginationQuery) *gorm.DB {
+	if query.Search != "" {
+		searchTerm := "%" + strings.ToLower(query.Search) + "%"
+		db = db.Where(
+			"LOWER(username) LIKE @q OR LOWER(first_name) LIKE @q OR LOWER(last_name) LIKE @q",
+			sql.Named("q", searchTerm),
+		)
+	}
+
+	if query.Role != "" {
+		db = db.Where("role = ?", query.Role)
+	}
+
+	return db
+}
+
+func applySorting(db *gorm.DB, query types.UserPaginationQuery) *gorm.DB {
+	if query.Sort == "" {
+		query.Sort = "created_at"
+	}
+	if query.Order == "" {
+		query.Order = "desc"
+	}
+
+	allowedSorts := map[string]bool{
+		"created_at": true,
+		"first_name": true,
+		"last_name":  true,
+	}
+
+	if allowedSorts[query.Sort] {
+		db = db.Order(query.Sort + " " + strings.ToUpper(query.Order))
+	} else {
+		db = db.Order("created_at DESC")
+	}
+
+	return db
 }

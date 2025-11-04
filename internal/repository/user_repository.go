@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/InstaySystem/is-be/internal/model"
+	"github.com/InstaySystem/is-be/internal/types"
 )
 
 type UserRepository interface {
@@ -18,4 +19,6 @@ type UserRepository interface {
 	Update(ctx context.Context, id int64, updateData map[string]any) error
 
 	ExistsByEmail(ctx context.Context, email string) (bool, error)
+
+	FindAllPaginated(ctx context.Context, query types.UserPaginationQuery) ([]*model.User, int64, error)
 }

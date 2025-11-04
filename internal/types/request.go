@@ -37,3 +37,12 @@ type ResetPasswordRequest struct {
 	ResetPasswordToken string `json:"reset_password_token" binding:"required,uuid4"`
 	NewPassword        string `json:"new_password" binding:"required,min=6"`
 }
+
+type UserPaginationQuery struct {
+	Page   uint32 `form:"page" binding:"omitempty,min=1" json:"page"`
+	Limit  uint32 `form:"limit" binding:"omitempty,min=1,max=100" json:"limit"`
+	Sort   string `form:"sort" json:"sort"`
+	Order  string `form:"order" binding:"omitempty,oneof=asc desc" json:"order"`
+	Role   string `form:"role" binding:"omitempty,oneof=admin technician receptionist housekeeper" json:"role"`
+	Search string `form:"search" json:"search"`
+}

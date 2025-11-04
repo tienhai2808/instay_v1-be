@@ -24,4 +24,6 @@ var (
 	ErrTooManyAttempts = errors.New("too many attempts")
 
 	ErrInvalidOTP = errors.New("invalid or expired OTP")
+
+	ErrInvalidID = errors.New("invalid ID")
 )
