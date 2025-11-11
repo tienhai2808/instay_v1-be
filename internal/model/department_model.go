@@ -12,7 +12,7 @@ type Department struct {
 	CreatedByID int64     `gorm:"type:bigint;not null" json:"created_by_id"`
 	UpdatedByID int64     `gorm:"type:bigint;not null" json:"updated_by_id"`
 
-	Staffs    []*User `gorm:"foreignKey:DepartmentID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"staffs"`
+	Staffs    []*User `gorm:"foreignKey:DepartmentID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT" json:"staffs"`
 	CreatedBy *User   `gorm:"foreignKey:CreatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT" json:"created_by"`
 	UpdatedBy *User   `gorm:"foreignKey:UpdatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT" json:"updated_by"`
 }

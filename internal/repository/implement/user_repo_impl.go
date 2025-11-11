@@ -25,9 +25,9 @@ func (r *userRepoImpl) Create(ctx context.Context, user *model.User) error {
 	return r.db.WithContext(ctx).Create(user).Error
 }
 
-func (r *userRepoImpl) FindByUsername(ctx context.Context, username string) (*model.User, error) {
+func (r *userRepoImpl) FindByUsernameWithDepartment(ctx context.Context, username string) (*model.User, error) {
 	var user model.User
-	if err := r.db.WithContext(ctx).Where("username = ?", username).First(&user).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Department").Where("username = ?", username).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -37,9 +37,9 @@ func (r *userRepoImpl) FindByUsername(ctx context.Context, username string) (*mo
 	return &user, nil
 }
 
-func (r *userRepoImpl) FindByID(ctx context.Context, id int64) (*model.User, error) {
+func (r *userRepoImpl) FindByIDWithDepartment(ctx context.Context, id int64) (*model.User, error) {
 	var user model.User
-	if err := r.db.WithContext(ctx).Where("id = ?", id).First(&user).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Department").Where("id = ?", id).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -92,11 +92,11 @@ func (r *userRepoImpl) CountActiveAdminExceptID(ctx context.Context, id int64) (
 	return count, nil
 }
 
-func (r *userRepoImpl) FindAllPaginated(ctx context.Context, query types.UserPaginationQuery) ([]*model.User, int64, error) {
+func (r *userRepoImpl) FindAllWithDepartmentPaginated(ctx context.Context, query types.UserPaginationQuery) ([]*model.User, int64, error) {
 	var users []*model.User
 	var total int64
 
-	db := r.db.WithContext(ctx).Model(&model.User{})
+	db := r.db.WithContext(ctx).Preload("Department").Model(&model.User{})
 	db = applyFilters(db, query)
 
 	if err := db.Count(&total).Error; err != nil {
@@ -136,6 +136,14 @@ func applyFilters(db *gorm.DB, query types.UserPaginationQuery) *gorm.DB {
 
 	if query.Role != "" {
 		db = db.Where("role = ?", query.Role)
+	}
+
+	if query.IsActive != nil {
+		db = db.Where("is_active = ?", *query.IsActive)
+	}
+
+	if query.Department != "" {
+    db = db.Joins("JOIN departments ON users.department_id = departments.id").Where("LOWER(departments.name) = ?", strings.ToLower(query.Department))
 	}
 
 	return db

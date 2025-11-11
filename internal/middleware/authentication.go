@@ -83,7 +83,7 @@ func (m *AuthMiddleware) IsAuthentication() gin.HandlerFunc {
 			}
 		}
 
-		user, err := m.userRepo.FindByID(ctx, userID)
+		user, err := m.userRepo.FindByIDWithDepartment(ctx, userID)
 		if err != nil {
 			m.logger.Error("find user by id failed", zap.Int64("id", userID), zap.Error(err))
 			c.AbortWithStatusJSON(http.StatusInternalServerError, types.APIResponse{
@@ -182,7 +182,7 @@ func (m *AuthMiddleware) HasRefreshToken() gin.HandlerFunc {
 			}
 		}
 
-		user, err := m.userRepo.FindByID(ctx, userID)
+		user, err := m.userRepo.FindByIDWithDepartment(ctx, userID)
 		if err != nil {
 			m.logger.Error("find user by id failed", zap.Int64("id", userID), zap.Error(err))
 			c.AbortWithStatusJSON(http.StatusInternalServerError, types.APIResponse{

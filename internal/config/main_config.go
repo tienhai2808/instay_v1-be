@@ -56,6 +56,13 @@ type Config struct {
 		User     string `mapstructure:"user"`
 		Password string `mapstructure:"password"`
 	} `mapstructure:"smtp"`
+
+	IMAP struct {
+		Host     string `mapstructure:"host"`
+		Port     int    `mapstructure:"port"`
+		User     string `mapstructure:"user"`
+		Password string `mapstructure:"password"`
+	} `mapstructure:"imap"`
 }
 
 func LoadConfig() (*Config, error) {

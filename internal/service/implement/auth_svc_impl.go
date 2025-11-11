@@ -53,7 +53,7 @@ func NewAuthService(
 }
 
 func (s *authSvcImpl) Login(ctx context.Context, req types.LoginRequest) (*model.User, string, string, error) {
-	user, err := s.userRepo.FindByUsername(ctx, req.Username)
+	user, err := s.userRepo.FindByUsernameWithDepartment(ctx, req.Username)
 	if err != nil {
 		s.logger.Error("find user by username failed", zap.String("username", req.Username), zap.Error(err))
 		return nil, "", "", err
@@ -102,7 +102,7 @@ func (s *authSvcImpl) RefreshToken(userID int64, userRole string) (string, strin
 }
 
 func (s *authSvcImpl) ChangePassword(ctx context.Context, userID int64, req types.ChangePasswordRequest) error {
-	user, err := s.userRepo.FindByID(ctx, userID)
+	user, err := s.userRepo.FindByIDWithDepartment(ctx, userID)
 	if err != nil {
 		s.logger.Error("find user by id failed", zap.Int64("id", userID), zap.Error(err))
 		return err
@@ -256,7 +256,7 @@ func (s *authSvcImpl) ResetPassword(ctx context.Context, req types.ResetPassword
 }
 
 func (s *authSvcImpl) UpdateInfo(ctx context.Context, userID int64, req types.UpdateInfoRequest) (*model.User, error) {
-	user, err := s.userRepo.FindByID(ctx, userID)
+	user, err := s.userRepo.FindByIDWithDepartment(ctx, userID)
 	if err != nil {
 		s.logger.Error("find user by id failed", zap.Int64("id", userID), zap.Error(err))
 		return nil, err
@@ -295,7 +295,7 @@ func (s *authSvcImpl) UpdateInfo(ctx context.Context, userID int64, req types.Up
 			return nil, err
 		}
 
-		user, _ = s.userRepo.FindByID(ctx, userID)
+		user, _ = s.userRepo.FindByIDWithDepartment(ctx, userID)
 	}
 
 	return user, nil

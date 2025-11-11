@@ -12,5 +12,9 @@ func DepartmentRouter(rg *gin.RouterGroup, hdl *handler.DepartmentHandler, authM
 		department.POST("", hdl.CreateDepartment)
 
 		department.GET("", hdl.GetDepartments)
+
+		department.PATCH("/:id", hdl.UpdateDepartment)
+
+		department.DELETE("/:id", hdl.DeleteDepartment)
 	}
 }

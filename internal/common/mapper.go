@@ -7,29 +7,55 @@ import (
 
 func ToUserResponse(user *model.User) *types.UserResponse {
 	return &types.UserResponse{
-		ID:        user.ID,
-		Email:     user.Email,
-		Phone:     user.Phone,
-		Username:  user.Username,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Role:      user.Role,
-		IsActive:  user.IsActive,
-		CreatedAt: user.CreatedAt,
+		ID:         user.ID,
+		Email:      user.Email,
+		Phone:      user.Phone,
+		Username:   user.Username,
+		FirstName:  user.FirstName,
+		LastName:   user.LastName,
+		Role:       user.Role,
+		IsActive:   user.IsActive,
+		CreatedAt:  user.CreatedAt,
+		Department: ToSimpleDepartmentResponse(user.Department),
+	}
+}
+
+func ToDepartmentData(department *model.Department) *types.DepartmentData {
+	if department == nil {
+		return nil
+	}
+
+	return &types.DepartmentData{
+		ID:          department.ID,
+		Name:        department.Name,
+		DisplayName: department.DisplayName,
+	}
+}
+
+func ToSimpleDepartmentResponse(department *model.Department) *types.SimpleDepartmentResponse {
+	if department == nil {
+		return nil
+	}
+
+	return &types.SimpleDepartmentResponse{
+		ID:          department.ID,
+		Name:        department.Name,
+		DisplayName: department.DisplayName,
 	}
 }
 
 func ToUserData(user *model.User) *types.UserData {
 	return &types.UserData{
-		ID:        user.ID,
-		Email:     user.Email,
-		Username:  user.Username,
-		Phone:     user.Phone,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Role:      user.Role,
-		IsActive:  user.IsActive,
-		CreatedAt: user.CreatedAt,
+		ID:         user.ID,
+		Email:      user.Email,
+		Username:   user.Username,
+		Phone:      user.Phone,
+		FirstName:  user.FirstName,
+		LastName:   user.LastName,
+		Role:       user.Role,
+		IsActive:   user.IsActive,
+		CreatedAt:  user.CreatedAt,
+		Department: ToDepartmentData(user.Department),
 	}
 }
 
@@ -41,6 +67,7 @@ func ToSimpleUserResponse(user *model.User) *types.SimpleUserResponse {
 		Role:      user.Role,
 		IsActive:  user.IsActive,
 		CreatedAt: user.CreatedAt,
+		Department: ToSimpleDepartmentResponse(user.Department),
 	}
 }
 

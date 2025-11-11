@@ -2,6 +2,7 @@ package implement
 
 import (
 	"context"
+	"errors"
 
 	"github.com/InstaySystem/is-be/internal/common"
 	"github.com/InstaySystem/is-be/internal/model"
@@ -30,11 +31,11 @@ func NewDepartmentService(
 	}
 }
 
-func (s *departmentSvcImpl) CreateDepartment(ctx context.Context, userID int64, req types.CreateDepartmentRequest) (int64, error) {
+func (s *departmentSvcImpl) CreateDepartment(ctx context.Context, userID int64, req types.CreateDepartmentRequest) error {
 	id, err := s.sfGen.NextID()
 	if err != nil {
 		s.logger.Error("generate ID failed", zap.Error(err))
-		return 0, err
+		return err
 	}
 
 	department := &model.Department{
@@ -49,13 +50,13 @@ func (s *departmentSvcImpl) CreateDepartment(ctx context.Context, userID int64, 
 	if err = s.departmentRepo.Create(ctx, department); err != nil {
 		ok, _ := common.IsUniqueViolation(err)
 		if ok {
-			return 0, common.ErrDepartmentAlreadyExists
+			return common.ErrDepartmentAlreadyExists
 		}
 		s.logger.Error("create department failed", zap.Error(err))
-		return 0, err
+		return err
 	}
 
-	return id, nil
+	return nil
 }
 
 func (s *departmentSvcImpl) GetDepartments(ctx context.Context) ([]*model.Department, error) {
@@ -66,4 +67,55 @@ func (s *departmentSvcImpl) GetDepartments(ctx context.Context) ([]*model.Depart
 	}
 
 	return departments, nil
+}
+
+func (s *departmentSvcImpl) UpdateDepartment(ctx context.Context, id, userID int64, req types.UpdateDepartmentRequest) error {
+	department, err := s.departmentRepo.FindByID(ctx, id)
+	if err != nil {
+		s.logger.Error("find department by id failed", zap.Int64("id", id), zap.Error(err))
+		return err
+	}
+	if department == nil {
+		return common.ErrDepartmentAlreadyExists
+	}
+
+	updateData := map[string]any{}
+
+	if department.Name != *req.Name {
+		updateData["name"] = req.Name
+	}
+	if department.DisplayName != *req.DisplayName {
+		updateData["display_name"] = req.DisplayName
+	}
+	if department.Description != *req.Description {
+		updateData["description"] = req.Description
+	}
+
+	if len(updateData) > 0 {
+		updateData["updated_by_id"] = userID
+		if err := s.departmentRepo.Update(ctx, id, updateData); err != nil {
+			if ok, _ := common.IsUniqueViolation(err); ok {
+				return common.ErrDepartmentAlreadyExists
+			}
+			s.logger.Error("update department failed", zap.Int64("id", id), zap.Error(err))
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *departmentSvcImpl) DeleteDepartment(ctx context.Context, id int64) error {
+	if err := s.departmentRepo.Delete(ctx, id); err != nil {
+		if errors.Is(err, common.ErrDepartmentNotFound) {
+			return err
+		}
+		if common.IsForeignKeyViolation(err) {
+			return common.ErrProtectedRecord
+		}
+		s.logger.Error("delete department failed", zap.Int64("id", id), zap.Error(err))
+		return err
+	}
+
+	return nil
 }

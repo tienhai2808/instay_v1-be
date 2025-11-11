@@ -31,11 +31,21 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
+	if req.DepartmentID != nil && req.Role == "admin" {
+		req.DepartmentID = nil
+	}
+	if req.DepartmentID == nil && req.Role == "staff" {
+		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrDepartmentRequired.Error(), nil)
+		return
+	}
+
 	id, err := h.userSvc.CreateUser(ctx, req)
 	if err != nil {
 		switch err {
 		case common.ErrEmailAlreadyExists, common.ErrUsernameAlreadyExists, common.ErrPhoneAlreadyExists:
 			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
+		case common.ErrDepartmentNotFound:
+			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
 		default:
 			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
 		}
@@ -130,9 +140,9 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		switch err {
 		case common.ErrEmailAlreadyExists, common.ErrUsernameAlreadyExists, common.ErrPhoneAlreadyExists:
 			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		case common.ErrUserNotFound:
+		case common.ErrUserNotFound, common.ErrDepartmentNotFound:
 			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrNeedAdmin:
+		case common.ErrNeedAdmin, common.ErrDepartmentRequired:
 			common.ToAPIResponse(c, http.StatusBadRequest, err.Error(), nil)
 		default:
 			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)

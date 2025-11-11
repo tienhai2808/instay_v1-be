@@ -34,4 +34,8 @@ var (
 	ErrNeedAdmin = errors.New("need 1 active administrator")
 
 	ErrDepartmentAlreadyExists = errors.New("department already exists")
+
+	ErrDepartmentNotFound = errors.New("department not found")
+
+	ErrDepartmentRequired = errors.New("departmentid is require")
 )

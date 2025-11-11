@@ -27,12 +27,13 @@ func NewUserContainer(
 	refreshExpiresIn time.Duration,
 	cacheProvider cache.CacheProvider,
 ) *UserContainer {
-	repo := repoImpl.NewUserRepository(db)
-	svc := svcImpl.NewUserService(repo, sfGen, logger, bHash, refreshExpiresIn, cacheProvider)
+	userRepo := repoImpl.NewUserRepository(db)
+	departmentRepo := repoImpl.NewDepartmentRepository(db)
+	svc := svcImpl.NewUserService(userRepo, departmentRepo, sfGen, logger, bHash, refreshExpiresIn, cacheProvider)
 	hdl := handler.NewUserHandler(svc)
 
 	return &UserContainer{
 		hdl,
-		repo,
+		userRepo,
 	}
 }

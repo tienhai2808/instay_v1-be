@@ -14,11 +14,11 @@ type User struct {
 	IsActive     bool      `gorm:"type:boolean;not null" json:"is_active"`
 	CreatedAt    time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt    time.Time `gorm:"autoUpdateTime" json:"updated_at"`
-	DepartmentID int64     `gorm:"type:bigint" json:"department_id"`
+	DepartmentID *int64    `gorm:"type:bigint" json:"department_id"`
 
-	Department      *Department `gorm:"foreignKey:DepartmentID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"department"`
-	DepartmentsCreated []*Department  `gorm:"foreignKey:CreatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT" json:"departments_created"`
-	DepartmentsUpdated []*Department  `gorm:"foreignKey:UpdatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT" json:"departments_updated"`
+	Department         *Department   `gorm:"foreignKey:DepartmentID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT" json:"department"`
+	DepartmentsCreated []*Department `gorm:"foreignKey:CreatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT" json:"departments_created"`
+	DepartmentsUpdated []*Department `gorm:"foreignKey:UpdatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT" json:"departments_updated"`
 	// ServicesCreated []*Service  `gorm:"foreignKey:CreatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT" json:"services_created"`
 	// ServicesUpdated []*Service  `gorm:"foreignKey:UpdatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT" json:"services_updated"`
 }

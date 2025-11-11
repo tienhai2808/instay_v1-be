@@ -20,6 +20,7 @@ import (
 
 type userSvcImpl struct {
 	userRepo         repository.UserRepository
+	departmentRepo   repository.DepartmentRepository
 	sfGen            snowflake.Generator
 	logger           *zap.Logger
 	bHash            bcrypt.Hasher
@@ -29,6 +30,7 @@ type userSvcImpl struct {
 
 func NewUserService(
 	userRepo repository.UserRepository,
+	departmentRepo repository.DepartmentRepository,
 	sfGen snowflake.Generator,
 	logger *zap.Logger,
 	bHash bcrypt.Hasher,
@@ -37,6 +39,7 @@ func NewUserService(
 ) service.UserService {
 	return &userSvcImpl{
 		userRepo,
+		departmentRepo,
 		sfGen,
 		logger,
 		bHash,
@@ -46,6 +49,17 @@ func NewUserService(
 }
 
 func (s *userSvcImpl) CreateUser(ctx context.Context, req types.CreateUserRequest) (int64, error) {
+	if req.DepartmentID != nil {
+		exists, err := s.departmentRepo.ExistsByID(ctx, *req.DepartmentID)
+		if err != nil {
+			s.logger.Error("find department by id failed", zap.Int64("id", *req.DepartmentID), zap.Error(err))
+			return 0, err
+		}
+		if !exists {
+			return 0, common.ErrDepartmentNotFound
+		}
+	}
+
 	hashedPass, err := s.bHash.HashPassword(req.Password)
 	if err != nil {
 		s.logger.Error("hash password failed", zap.Error(err))
@@ -59,19 +73,20 @@ func (s *userSvcImpl) CreateUser(ctx context.Context, req types.CreateUserReques
 	}
 
 	user := &model.User{
-		ID:        id,
-		Username:  req.Username,
-		Email:     req.Email,
-		Password:  hashedPass,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Role:      req.Role,
-		IsActive:  req.IsActive,
+		ID:           id,
+		Username:     req.Username,
+		Email:        req.Email,
+		Password:     hashedPass,
+		FirstName:    req.FirstName,
+		LastName:     req.LastName,
+		Phone:        req.Phone,
+		Role:         req.Role,
+		IsActive:     req.IsActive,
+		DepartmentID: req.DepartmentID,
 	}
 
 	if err = s.userRepo.Create(ctx, user); err != nil {
-		ok, constraint := common.IsUniqueViolation(err)
-		if ok {
+		if ok, constraint := common.IsUniqueViolation(err); ok {
 			switch constraint {
 			case "users_email_key":
 				return 0, common.ErrEmailAlreadyExists
@@ -89,7 +104,7 @@ func (s *userSvcImpl) CreateUser(ctx context.Context, req types.CreateUserReques
 }
 
 func (s *userSvcImpl) GetUserByID(ctx context.Context, id int64) (*model.User, error) {
-	user, err := s.userRepo.FindByID(ctx, id)
+	user, err := s.userRepo.FindByIDWithDepartment(ctx, id)
 	if err != nil {
 		s.logger.Error("find user by id failed", zap.Int64("id", id), zap.Error(err))
 		return nil, err
@@ -109,7 +124,7 @@ func (s *userSvcImpl) GetUsers(ctx context.Context, query types.UserPaginationQu
 		query.Limit = 10
 	}
 
-	users, total, err := s.userRepo.FindAllPaginated(ctx, query)
+	users, total, err := s.userRepo.FindAllWithDepartmentPaginated(ctx, query)
 	if err != nil {
 		s.logger.Error("find all user paginated failed", zap.Error(err))
 		return nil, nil, err
@@ -133,7 +148,7 @@ func (s *userSvcImpl) GetUsers(ctx context.Context, query types.UserPaginationQu
 }
 
 func (s *userSvcImpl) UpdateUser(ctx context.Context, id int64, req types.UpdateUserRequest) (*model.User, error) {
-	user, err := s.userRepo.FindByID(ctx, id)
+	user, err := s.userRepo.FindByIDWithDepartment(ctx, id)
 	if err != nil {
 		s.logger.Error("find user by id failed", zap.Int64("id", id), zap.Error(err))
 		return nil, err
@@ -143,6 +158,35 @@ func (s *userSvcImpl) UpdateUser(ctx context.Context, id int64, req types.Update
 	}
 
 	updateData := map[string]any{}
+
+	var newRole string
+	if req.Role != nil {
+		newRole = *req.Role
+	} else {
+		newRole = user.Role
+	}
+
+	switch newRole {
+	case "staff":
+		if req.DepartmentID != nil {
+			updateData["department_id"] = *req.DepartmentID
+		} else if user.DepartmentID == nil {
+			return nil, common.ErrDepartmentRequired
+		}
+	case "admin":
+		updateData["department_id"] = nil
+	}
+
+	if depID, ok := updateData["department_id"].(int64); ok {
+		exists, err := s.departmentRepo.ExistsByID(ctx, depID)
+		if err != nil {
+			s.logger.Error("find department by id failed", zap.Int64("id", depID), zap.Error(err))
+			return nil, err
+		}
+		if !exists {
+			return nil, common.ErrDepartmentNotFound
+		}
+	}
 
 	if req.Username != nil && *req.Username != user.Username {
 		updateData["username"] = req.Username
@@ -181,8 +225,7 @@ func (s *userSvcImpl) UpdateUser(ctx context.Context, id int64, req types.Update
 
 	if len(updateData) > 0 {
 		if err = s.userRepo.Update(ctx, id, updateData); err != nil {
-			ok, constraint := common.IsUniqueViolation(err)
-			if ok {
+			if ok, constraint := common.IsUniqueViolation(err); ok {
 				switch constraint {
 				case "users_username_key":
 					return nil, common.ErrUsernameAlreadyExists
@@ -196,14 +239,14 @@ func (s *userSvcImpl) UpdateUser(ctx context.Context, id int64, req types.Update
 			return nil, err
 		}
 
-		user, _ = s.userRepo.FindByID(ctx, id)
+		user, _ = s.userRepo.FindByIDWithDepartment(ctx, id)
 	}
 
 	return user, nil
 }
 
 func (s *userSvcImpl) UpdateUserPassword(ctx context.Context, id int64, req types.UpdateUserPasswordRequest) (*model.User, error) {
-	user, err := s.userRepo.FindByID(ctx, id)
+	user, err := s.userRepo.FindByIDWithDepartment(ctx, id)
 	if err != nil {
 		s.logger.Error("find user by id failed", zap.Int64("id", id), zap.Error(err))
 		return nil, err

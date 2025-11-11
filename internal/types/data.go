@@ -3,15 +3,22 @@ package types
 import "time"
 
 type UserData struct {
-	ID        int64     `json:"id"`
-	Username  string    `json:"username"`
-	Email     string    `json:"email"`
-	Phone     string    `json:"phone"`
-	Role      string    `json:"role"`
-	IsActive  bool      `json:"is_active"`
-	FirstName string    `json:"first_name"`
-	LastName  string    `json:"last_name"`
-	CreatedAt time.Time `json:"created_at"`
+	ID         int64           `json:"id"`
+	Username   string          `json:"username"`
+	Email      string          `json:"email"`
+	Phone      string          `json:"phone"`
+	Role       string          `json:"role"`
+	IsActive   bool            `json:"is_active"`
+	FirstName  string          `json:"first_name"`
+	LastName   string          `json:"last_name"`
+	CreatedAt  time.Time       `json:"created_at"`
+	Department *DepartmentData `json:"department"`
+}
+
+type DepartmentData struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	DisplayName string `json:"display_name"`
 }
 
 type AuthEmailData struct {
