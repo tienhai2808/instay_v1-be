@@ -81,13 +81,13 @@ func (s *departmentSvcImpl) UpdateDepartment(ctx context.Context, id, userID int
 
 	updateData := map[string]any{}
 
-	if department.Name != *req.Name {
+	if req.Name != nil && department.Name != *req.Name {
 		updateData["name"] = req.Name
 	}
-	if department.DisplayName != *req.DisplayName {
+	if req.DisplayName != nil && department.DisplayName != *req.DisplayName {
 		updateData["display_name"] = req.DisplayName
 	}
-	if department.Description != *req.Description {
+	if req.Description != nil && department.Description != *req.Description {
 		updateData["description"] = req.Description
 	}
 
