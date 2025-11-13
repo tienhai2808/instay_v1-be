@@ -21,14 +21,14 @@ type UserResponse struct {
 }
 
 type DepartmentResponse struct {
-	ID          int64               `json:"id"`
-	Name        string              `json:"name"`
-	DisplayName string              `json:"display_name"`
-	Description string              `json:"description"`
-	CreatedAt   time.Time           `json:"created_at"`
-	UpdatedAt   time.Time           `json:"updated_at"`
-	CreatedBy   *SimpleUserResponse `json:"created_by"`
-	UpdatedBy   *SimpleUserResponse `json:"updated_by"`
+	ID          int64              `json:"id"`
+	Name        string             `json:"name"`
+	DisplayName string             `json:"display_name"`
+	Description string             `json:"description"`
+	CreatedAt   time.Time          `json:"created_at"`
+	UpdatedAt   time.Time          `json:"updated_at"`
+	CreatedBy   *BasicUserResponse `json:"created_by"`
+	UpdatedBy   *BasicUserResponse `json:"updated_by"`
 }
 
 type SimpleUserResponse struct {
@@ -39,6 +39,13 @@ type SimpleUserResponse struct {
 	IsActive   bool                      `json:"is_active"`
 	CreatedAt  time.Time                 `json:"created_at"`
 	Department *SimpleDepartmentResponse `json:"department"`
+}
+
+type BasicUserResponse struct {
+	ID        int64  `json:"id"`
+	Username  string `json:"username"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 type SimpleDepartmentResponse struct {
@@ -59,4 +66,14 @@ type MetaResponse struct {
 	TotalPages uint16 `json:"total_pages"`
 	HasPrev    bool   `json:"has_prev"`
 	HasNext    bool   `json:"has_next"`
+}
+
+type ServiceTypeResponse struct {
+	ID         int64                     `json:"id"`
+	Name       string                    `json:"name"`
+	CreatedAt  time.Time                 `json:"created_at"`
+	UpdatedAt  time.Time                 `json:"updated_at"`
+	CreatedBy  *BasicUserResponse        `json:"created_by"`
+	UpdatedBy  *BasicUserResponse        `json:"updated_by"`
+	Department *SimpleDepartmentResponse `json:"department"`
 }

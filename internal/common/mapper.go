@@ -61,12 +61,12 @@ func ToUserData(user *model.User) *types.UserData {
 
 func ToSimpleUserResponse(user *model.User) *types.SimpleUserResponse {
 	return &types.SimpleUserResponse{
-		ID:        user.ID,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Role:      user.Role,
-		IsActive:  user.IsActive,
-		CreatedAt: user.CreatedAt,
+		ID:         user.ID,
+		FirstName:  user.FirstName,
+		LastName:   user.LastName,
+		Role:       user.Role,
+		IsActive:   user.IsActive,
+		CreatedAt:  user.CreatedAt,
 		Department: ToSimpleDepartmentResponse(user.Department),
 	}
 }
@@ -99,8 +99,8 @@ func ToDepartmentResponse(department *model.Department) *types.DepartmentRespons
 		Description: department.Description,
 		CreatedAt:   department.CreatedAt,
 		UpdatedAt:   department.UpdatedAt,
-		CreatedBy:   ToSimpleUserResponse(department.CreatedBy),
-		UpdatedBy:   ToSimpleUserResponse(department.UpdatedBy),
+		CreatedBy:   ToBasicUserResponse(department.CreatedBy),
+		UpdatedBy:   ToBasicUserResponse(department.UpdatedBy),
 	}
 }
 
@@ -115,4 +115,38 @@ func ToDepartmentsResponse(departments []*model.Department) []*types.DepartmentR
 	}
 
 	return departmentsRes
+}
+
+func ToBasicUserResponse(user *model.User) *types.BasicUserResponse {
+	return &types.BasicUserResponse{
+		ID:        user.ID,
+		Username:  user.Username,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+	}
+}
+
+func ToServiceTypeResponse(serviceType *model.ServiceType) *types.ServiceTypeResponse {
+	return &types.ServiceTypeResponse{
+		ID:         serviceType.ID,
+		Name:       serviceType.Name,
+		CreatedAt:  serviceType.CreatedAt,
+		UpdatedAt:  serviceType.UpdatedAt,
+		CreatedBy:  ToBasicUserResponse(serviceType.CreatedBy),
+		UpdatedBy:  ToBasicUserResponse(serviceType.UpdatedBy),
+		Department: ToSimpleDepartmentResponse(serviceType.Department),
+	}
+}
+
+func ToServiceTypesResponse(serviceTypes []*model.ServiceType) []*types.ServiceTypeResponse {
+	if len(serviceTypes) == 0 {
+		return make([]*types.ServiceTypeResponse, 0)
+	}
+
+	serviceTypesRes := make([]*types.ServiceTypeResponse, 0, len(serviceTypes))
+	for _, serviceType := range serviceTypes {
+		serviceTypesRes = append(serviceTypesRes, ToServiceTypeResponse(serviceType))
+	}
+
+	return serviceTypesRes
 }

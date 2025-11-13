@@ -60,15 +60,6 @@ func (r *departmentRepoImpl) FindByID(ctx context.Context, id int64) (*model.Dep
 	return &department, nil
 }
 
-func (r *departmentRepoImpl) ExistsByID(ctx context.Context, id int64) (bool, error) {
-	var count int64 
-	if err := r.db.WithContext(ctx).Model(&model.Department{}).Where("id = ?", id).Count(&count).Error; err != nil {
-		return false, nil
-	}
-
-	return count > 0, nil
-}
-
 func (r *departmentRepoImpl) FindAllWithCreatedByAndUpdatedBy(ctx context.Context) ([]*model.Department, error) {
 	var departments []*model.Department
 	if err := r.db.WithContext(ctx).Preload("CreatedBy").Preload("UpdatedBy").Order("name ASC").Find(&departments).Error; err != nil {

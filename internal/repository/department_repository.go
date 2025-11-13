@@ -13,8 +13,6 @@ type DepartmentRepository interface {
 
 	Delete(ctx context.Context, id int64) error
 
-	ExistsByID(ctx context.Context, id int64) (bool, error)
-
 	FindByID(ctx context.Context, id int64) (*model.Department, error)
 
 	FindAllWithCreatedByAndUpdatedBy(ctx context.Context) ([]*model.Department, error)

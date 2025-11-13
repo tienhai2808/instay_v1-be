@@ -66,7 +66,7 @@ func (h *DepartmentHandler) GetDepartments(c *gin.Context) {
 		return
 	}
 
-	common.ToAPIResponse(c, http.StatusOK, "Get department list successfully", gin.H{
+	common.ToAPIResponse(c, http.StatusOK, "Get departments successfully", gin.H{
 		"departments": common.ToDepartmentsResponse(departments),
 	})
 }

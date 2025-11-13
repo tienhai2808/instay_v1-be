@@ -7,8 +7,12 @@ import (
 )
 
 func ServiceRouter(rg *gin.RouterGroup, hdl *handler.ServiceHandler, authMid *middleware.AuthMiddleware) {
-	service_type := rg.Group("/service-types", authMid.IsAuthentication(), authMid.HasAnyRole([]string{"admin"}))
+	admin := rg.Group("/admin", authMid.IsAuthentication(), authMid.HasAnyRole([]string{"admin"}))
 	{
-		service_type.POST("", hdl.CreateServiceType)
+		admin.POST("/service-types", hdl.CreateServiceType)
+
+		admin.GET("/service-types", hdl.GetServiceTypesForAdmin)
+
+		admin.PATCH("/service-types/:id", hdl.UpdateServiceType)
 	}
 }

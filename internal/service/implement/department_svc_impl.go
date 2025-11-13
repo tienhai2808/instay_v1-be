@@ -76,7 +76,7 @@ func (s *departmentSvcImpl) UpdateDepartment(ctx context.Context, id, userID int
 		return err
 	}
 	if department == nil {
-		return common.ErrDepartmentAlreadyExists
+		return common.ErrDepartmentNotFound
 	}
 
 	updateData := map[string]any{}
