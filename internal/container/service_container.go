@@ -2,6 +2,7 @@ package container
 
 import (
 	"github.com/InstaySystem/is-be/internal/handler"
+	"github.com/InstaySystem/is-be/internal/provider/mq"
 	repoImpl "github.com/InstaySystem/is-be/internal/repository/implement"
 	svcImpl "github.com/InstaySystem/is-be/internal/service/implement"
 	"github.com/InstaySystem/is-be/pkg/snowflake"
@@ -17,9 +18,10 @@ func NewServiceContainer(
 	db *gorm.DB,
 	sfGen snowflake.Generator,
 	logger *zap.Logger,
+	mqProvider mq.MessageQueueProvider,
 ) *ServiceContainer {
 	repo := repoImpl.NewServiceRepository(db)
-	svc := svcImpl.NewServiceService(repo, db, sfGen, logger)
+	svc := svcImpl.NewServiceService(repo, db, sfGen, logger, mqProvider)
 	hdl := handler.NewServiceHandler(svc)
 
 	return &ServiceContainer{hdl}

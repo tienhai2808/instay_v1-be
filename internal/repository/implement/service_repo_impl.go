@@ -34,6 +34,15 @@ func (r *serviceRepoImpl) FindAllServiceTypesWithDetails(ctx context.Context) ([
 	return serviceTypes, nil
 }
 
+func (r *serviceRepoImpl) FindAllServiceType(ctx context.Context) ([]*model.ServiceType, error) {
+	var serviceTypes []*model.ServiceType
+	if err := r.db.WithContext(ctx).Find(&serviceTypes).Error; err != nil {
+		return nil, err
+	}
+
+	return serviceTypes, nil
+}
+
 func (r *serviceRepoImpl) FindServiceTypeByID(ctx context.Context, serviceTypeID int64) (*model.ServiceType, error) {
 	var serviceType model.ServiceType
 	if err := r.db.WithContext(ctx).Where("id = ?", serviceTypeID).First(&serviceType).Error; err != nil {
@@ -86,6 +95,31 @@ func (r *serviceRepoImpl) DeleteServiceType(ctx context.Context, serviceTypeID i
 
 func (r *serviceRepoImpl) CreateService(ctx context.Context, service *model.Service) error {
 	return r.db.WithContext(ctx).Create(service).Error
+}
+
+func (r *serviceRepoImpl) FindAllServiceImagesByIDTx(ctx context.Context, tx *gorm.DB, ids []int64) ([]*model.ServiceImage, error) {
+	var images []*model.ServiceImage
+	if err := tx.WithContext(ctx).Where("id IN ?", ids).Find(&images).Error; err != nil {
+		return nil, err
+	}
+
+	return images, nil
+}
+
+func (r *serviceRepoImpl) DeleteAllServiceImagesByIDTx(ctx context.Context, tx *gorm.DB, ids []int64) error {
+	return tx.WithContext(ctx).Where("id IN ?", ids).Delete(&model.ServiceImage{}).Error
+}
+
+func (r *serviceRepoImpl) UpdateServiceImageTx(ctx context.Context, tx *gorm.DB, serviceImageID int64, updateData map[string]any) error {
+	return tx.WithContext(ctx).Model(&model.ServiceImage{}).Where("id = ?", serviceImageID).Updates(updateData).Error
+}
+
+func (r *serviceRepoImpl) CreateAllServiceImageTx(ctx context.Context, tx *gorm.DB, serviceImages []*model.ServiceImage) error {
+	return tx.WithContext(ctx).Create(serviceImages).Error
+}
+
+func (r *serviceRepoImpl) UpdateServiceTx(ctx context.Context, tx *gorm.DB, serviceID int64, updateData map[string]any) error {
+	return tx.WithContext(ctx).Model(&model.Service{}).Where("id = ?", serviceID).Updates(updateData).Error
 }
 
 func (r *serviceRepoImpl) FindAllServicesWithServiceTypeAndThumbnailPaginated(ctx context.Context, query types.ServicePaginationQuery) ([]*model.Service, int64, error) {

@@ -50,4 +50,6 @@ var (
 	ErrInvalidQuery = errors.New("invalid query")
 
 	ErrFileNotFound = errors.New("file not found")
+
+	ErrHasServiceImageNotFound = errors.New("has service image not found")
 )

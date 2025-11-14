@@ -50,7 +50,7 @@ func NewContainer(
 	authCtn := NewAuthContainer(cfg, db, logger, bHash, jwtProvider, cacheProvider, mqProvider)
 	userCtn := NewUserContainer(db, sfGen, logger, bHash, cfg.JWT.RefreshExpiresIn, cacheProvider)
 	departmentCtn := NewDepartmentContainer(db, sfGen, logger)
-	serviceCtn := NewServiceContainer(db, sfGen, logger)
+	serviceCtn := NewServiceContainer(db, sfGen, logger, mqProvider)
 
 	authMid := middleware.NewAuthMiddleware(cfg.JWT.AccessName, cfg.JWT.RefreshName, userCtn.Repo, jwtProvider, logger, cacheProvider)
 	reqMid := middleware.NewRequestMiddleware(logger)

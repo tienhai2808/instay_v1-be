@@ -240,7 +240,6 @@ func ToServiceImageResponse(image *model.ServiceImage) *types.ServiceImageRespon
 		Key:         image.Key,
 		IsThumbnail: image.IsThumbnail,
 		SortOrder:   image.SortOrder,
-		UploadedAt:  image.UploadedAt,
 	}
 }
 
@@ -274,4 +273,17 @@ func ToServiceResponse(service *model.Service) *types.ServiceResponse {
 		UpdatedBy:     ToBasicUserResponse(service.UpdatedBy),
 		ServiceImages: ToServiceImagesResponse(service.ServiceImages),
 	}
+}
+
+func ToSimpleServiceTypesResponse(serviceTypes []*model.ServiceType) []*types.SimpleServiceTypeResponse {
+	if len(serviceTypes) == 0 {
+		return make([]*types.SimpleServiceTypeResponse, 0)
+	}
+
+	serviceTypesRes := make([]*types.SimpleServiceTypeResponse, 0, len(serviceTypes))
+	for _, serviceType := range serviceTypes {
+		serviceTypesRes = append(serviceTypesRes, ToSimpleServiceTypeResponse(serviceType))
+	}
+
+	return serviceTypesRes
 }

@@ -1,41 +1,51 @@
 package worker
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	// "log"
 
 	"github.com/InstaySystem/is-be/internal/common"
+	"github.com/InstaySystem/is-be/internal/config"
 	"github.com/InstaySystem/is-be/internal/provider/mq"
 	"github.com/InstaySystem/is-be/internal/provider/smtp"
 	"github.com/InstaySystem/is-be/internal/types"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsS3 "github.com/aws/aws-sdk-go-v2/service/s3"
 	// "github.com/emersion/go-imap"
 	// "github.com/emersion/go-imap/client"
 	"go.uber.org/zap"
 )
 
-type EmailWorker struct {
+type MQWorker struct {
+	cfg *config.Config
 	mq     mq.MessageQueueProvider
 	smtp   smtp.SMTPProvider
 	// imap   *client.Client
+	s3 *awsS3.Client
 	logger *zap.Logger
 }
 
-func NewEmailWorker(
+func NewMQWorker(
+	cfg *config.Config,
 	mq mq.MessageQueueProvider,
 	smtp smtp.SMTPProvider,
+	s3 *awsS3.Client,
 	// imap *client.Client,
 	logger *zap.Logger,
-) *EmailWorker {
-	return &EmailWorker{
+) *MQWorker {
+	return &MQWorker{
+		cfg,
 		mq,
 		smtp,
+		s3,
 		// imap,
 		logger,
 	}
 }
 
-func (w *EmailWorker) StartSendAuthEmail() {
+func (w *MQWorker) StartSendAuthEmail() {
 	if err := w.mq.ConsumeMessage(common.QueueNameAuthEmail, common.ExchangeEmail, common.RoutingKeyAuthEmail, func(body []byte) error {
 		var emailMsg types.AuthEmailMessage
 		if err := json.Unmarshal(body, &emailMsg); err != nil {
@@ -50,6 +60,32 @@ func (w *EmailWorker) StartSendAuthEmail() {
 		return nil
 	}); err != nil {
 		w.logger.Error("start consumer send auth email failed", zap.Error(err))
+	}
+}
+
+func (w *MQWorker) StartDeleteFile() {
+	if err := w.mq.ConsumeMessage(common.QueueNameDeleteFile, common.ExchangeFile, common.RoutingKeyDeleteFile, func(body []byte) error {
+		key := string(body)
+
+		ctx := context.Background()
+
+		if _, err := w.s3.HeadObject(ctx, &awsS3.HeadObjectInput{
+			Bucket: aws.String(w.cfg.S3.Bucket),
+			Key: aws.String(key),
+		}); err != nil {
+			w.logger.Error("file check failed", zap.Error(err))
+		}
+
+		if _, err := w.s3.DeleteObject(ctx, &awsS3.DeleteObjectInput{
+			Bucket: aws.String(w.cfg.S3.Bucket),
+			Key: aws.String(key),
+		}); err != nil {
+			w.logger.Error("file delete failed", zap.Error(err))
+		}
+
+		return nil
+	}); err != nil {
+		w.logger.Error("start consumer delete file failed", zap.Error(err))
 	}
 }
 

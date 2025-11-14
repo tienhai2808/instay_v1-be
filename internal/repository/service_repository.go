@@ -5,6 +5,7 @@ import (
 
 	"github.com/InstaySystem/is-be/internal/model"
 	"github.com/InstaySystem/is-be/internal/types"
+	"gorm.io/gorm"
 )
 
 type ServiceRepository interface {
@@ -23,4 +24,16 @@ type ServiceRepository interface {
 	FindAllServicesWithServiceTypeAndThumbnailPaginated(ctx context.Context, query types.ServicePaginationQuery) ([]*model.Service, int64, error)
 
 	FindServiceByIDWithDetails(ctx context.Context, serviceID int64) (*model.Service, error)
+
+	FindAllServiceImagesByIDTx(ctx context.Context, tx *gorm.DB, ids []int64) ([]*model.ServiceImage, error)
+
+	DeleteAllServiceImagesByIDTx(ctx context.Context, tx *gorm.DB, ids []int64) error
+
+	UpdateServiceImageTx(ctx context.Context, tx *gorm.DB, serviceImageID int64, updateData map[string]any) error
+
+	CreateAllServiceImageTx(ctx context.Context, tx *gorm.DB, serviceImages []*model.ServiceImage) error
+
+	UpdateServiceTx(ctx context.Context, tx *gorm.DB, serviceID int64, updateData map[string]any) error
+
+	FindAllServiceType(ctx context.Context) ([]*model.ServiceType, error)
 }

@@ -115,16 +115,17 @@ type CreateServiceImageRequest struct {
 }
 
 type UpdateServiceRequest struct {
-	Name          *string                      `json:"name" binding:"omitempty,min=2"`
-	Price         *float64                     `json:"price" binding:"omitempty,gt=0"`
-	IsActive      *bool                        `json:"is_active" binding:"omitempty"`
-	ServiceTypeID *int64                       `json:"service_type_id" binding:"omitempty"`
-	UpdateImages  []*UpdateServiceImageRequest `json:"update_images" binding:"omitempty"`
-	DeleteImages  []int64                      `json:"delete_images" binding:"omitempty"`
+	Name          *string                     `json:"name" binding:"omitempty,min=2"`
+	Price         *float64                    `json:"price" binding:"omitempty,gt=0"`
+	IsActive      *bool                       `json:"is_active" binding:"omitempty"`
+	ServiceTypeID *int64                      `json:"service_type_id" binding:"omitempty"`
+	NewImages     []CreateServiceImageRequest `json:"new_images" binding:"omitempty,dive"`
+	UpdateImages  []UpdateServiceImageRequest `json:"update_images" binding:"omitempty,dive"`
+	DeleteImages  []int64                     `json:"delete_images" binding:"omitempty,dive"`
 }
 
 type UpdateServiceImageRequest struct {
-	ID          *int64  `json:"id" binding:"omitempty"`
+	ID          int64   `json:"id" binding:"required"`
 	Key         *string `json:"key" binding:"omitempty,min=2"`
 	IsThumbnail *bool   `json:"is_thumbnail" binding:"omitempty"`
 	SortOrder   *uint32 `json:"sort_order" binding:"omitempty,gt=0"`

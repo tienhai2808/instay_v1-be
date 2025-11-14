@@ -69,8 +69,9 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 	ctn := container.NewContainer(cfg, db.Gorm, rdb, s3, sf, logger, mq.Conn, mq.Chan)
 
-	emailWorker := worker.NewEmailWorker(ctn.MQProvider, ctn.SMTPProvider, logger)
-	go emailWorker.StartSendAuthEmail()
+	mqWorker := worker.NewMQWorker(cfg, ctn.MQProvider, ctn.SMTPProvider, s3.Client, logger)
+	go mqWorker.StartSendAuthEmail()
+	go mqWorker.StartDeleteFile()
 
 	r := gin.Default()
 	if err = r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {

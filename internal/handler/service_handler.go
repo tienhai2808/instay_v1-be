@@ -263,6 +263,21 @@ func (h *ServiceHandler) UpdateService(c *gin.Context) {
 	}
 
 	if err := h.serviceSvc.UpdateService(ctx, serviceID, user.ID, req); err != nil {
-		
+
 	}
+}
+
+func (h *ServiceHandler) GetServiceTypesForGuest(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	serviceTypes, err := h.serviceSvc.GetServiceTypesForGuest(ctx)
+	if err != nil {
+		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		return
+	}
+
+	common.ToAPIResponse(c, http.StatusOK, "Get service types successfully", gin.H{
+		"service_types": common.ToSimpleServiceTypesResponse(serviceTypes),
+	})
 }
