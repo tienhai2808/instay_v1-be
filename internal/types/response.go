@@ -75,13 +75,14 @@ type MetaResponse struct {
 }
 
 type ServiceTypeResponse struct {
-	ID         int64                     `json:"id"`
-	Name       string                    `json:"name"`
-	CreatedAt  time.Time                 `json:"created_at"`
-	UpdatedAt  time.Time                 `json:"updated_at"`
-	CreatedBy  *BasicUserResponse        `json:"created_by"`
-	UpdatedBy  *BasicUserResponse        `json:"updated_by"`
-	Department *SimpleDepartmentResponse `json:"department"`
+	ID           int64                     `json:"id"`
+	Name         string                    `json:"name"`
+	CreatedAt    time.Time                 `json:"created_at"`
+	UpdatedAt    time.Time                 `json:"updated_at"`
+	CreatedBy    *BasicUserResponse        `json:"created_by"`
+	UpdatedBy    *BasicUserResponse        `json:"updated_by"`
+	Department   *SimpleDepartmentResponse `json:"department"`
+	ServiceCount int64                     `json:"service_count"`
 }
 
 type SimpleServiceTypeResponse struct {

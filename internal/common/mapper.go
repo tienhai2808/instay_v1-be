@@ -144,6 +144,7 @@ func ToServiceTypeResponse(serviceType *model.ServiceType) *types.ServiceTypeRes
 		CreatedBy:  ToBasicUserResponse(serviceType.CreatedBy),
 		UpdatedBy:  ToBasicUserResponse(serviceType.UpdatedBy),
 		Department: ToSimpleDepartmentResponse(serviceType.Department),
+		ServiceCount: serviceType.ServiceCount,
 	}
 }
 

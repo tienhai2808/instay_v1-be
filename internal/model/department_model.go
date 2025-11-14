@@ -12,9 +12,10 @@ type Department struct {
 	CreatedByID int64     `gorm:"type:bigint;not null" json:"created_by_id"`
 	UpdatedByID int64     `gorm:"type:bigint;not null" json:"updated_by_id"`
 
-	Staffs       []*User        `gorm:"foreignKey:DepartmentID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT,name:fk_users_department" json:"staffs"`
-	ServiceTypes []*ServiceType `gorm:"foreignKey:DepartmentID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT,name:fk_service_types_department" json:"service_types"`
-	CreatedBy    *User          `gorm:"foreignKey:CreatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT,name:fk_departments_created_by" json:"created_by"`
-	UpdatedBy    *User          `gorm:"foreignKey:UpdatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT,name:fk_departments_updated_by" json:"updated_by"`
+	Staffs       []*User        `gorm:"foreignKey:DepartmentID;references:ID;constraint:fk_users_department,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"staffs"`
+	ServiceTypes []*ServiceType `gorm:"foreignKey:DepartmentID;references:ID;constraint:fk_service_types_department,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"service_types"`
+	RequestTypes []*RequestType `gorm:"foreignKey:DepartmentID;references:ID;constraint:fk_request_types_department,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"request_types"`
+	CreatedBy    *User          `gorm:"foreignKey:CreatedByID;references:ID;constraint:fk_departments_created_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"created_by"`
+	UpdatedBy    *User          `gorm:"foreignKey:UpdatedByID;references:ID;constraint:fk_departments_updated_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"updated_by"`
 	StaffCount   int64          `gorm:"-" json:"staff_count"`
 }

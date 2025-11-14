@@ -34,6 +34,25 @@ func (r *serviceRepoImpl) FindAllServiceTypesWithDetails(ctx context.Context) ([
 	return serviceTypes, nil
 }
 
+func (r *serviceRepoImpl) CountServiceByServiceTypeID(ctx context.Context, serviceTypeIDs []int64) (map[int64]int64, error) {
+	var counts []types.ServiceCountResult
+	if err := r.db.WithContext(ctx).
+		Model(&model.Service{}).
+		Select("service_type_id, COUNT(*) as service_count").
+		Where("service_type_id IN ?", serviceTypeIDs).
+		Group("service_type_id").
+		Scan(&counts).Error; err != nil {
+		return nil, err
+	}
+
+	countMap := make(map[int64]int64, len(counts))
+	for _, c := range counts {
+		countMap[c.ServiceTypeID] = c.ServiceCount
+	}
+
+	return countMap, nil
+}
+
 func (r *serviceRepoImpl) FindAllServiceType(ctx context.Context) ([]*model.ServiceType, error) {
 	var serviceTypes []*model.ServiceType
 	if err := r.db.WithContext(ctx).Find(&serviceTypes).Error; err != nil {

@@ -16,11 +16,13 @@ type User struct {
 	UpdatedAt    time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 	DepartmentID *int64    `gorm:"type:bigint" json:"department_id"`
 
-	Department          *Department    `gorm:"foreignKey:DepartmentID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT,name:fk_users_department" json:"department"`
-	DepartmentsCreated  []*Department  `gorm:"foreignKey:CreatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT,name:fk_departments_created_by" json:"departments_created"`
-	DepartmentsUpdated  []*Department  `gorm:"foreignKey:UpdatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT,name:fk_departments_updated_by" json:"departments_updated"`
-	ServiceTypesCreated []*ServiceType `gorm:"foreignKey:CreatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT,name:fk_service_types_created_by" json:"service_types_created"`
-	ServiceTypesUpdated []*ServiceType `gorm:"foreignKey:UpdatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT,name:fk_service_types_updated_by" json:"service_types_updated"`
-	ServicesCreated     []*Service     `gorm:"foreignKey:CreatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT,name:fk_services_created_by" json:"services_created"`
-	ServicesUpdated     []*Service     `gorm:"foreignKey:UpdatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT,name:fk_services_updated_by" json:"services_updated"`
+	Department          *Department    `gorm:"foreignKey:DepartmentID;references:ID;constraint:fk_users_department,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"department"`
+	DepartmentsCreated  []*Department  `gorm:"foreignKey:CreatedByID;references:ID;constraint:fk_departments_created_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"departments_created"`
+	DepartmentsUpdated  []*Department  `gorm:"foreignKey:UpdatedByID;references:ID;constraint:fk_departments_updated_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"departments_updated"`
+	ServiceTypesCreated []*ServiceType `gorm:"foreignKey:CreatedByID;references:ID;constraint:fk_service_types_created_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"service_types_created"`
+	ServiceTypesUpdated []*ServiceType `gorm:"foreignKey:UpdatedByID;references:ID;constraint:fk_service_types_updated_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"service_types_updated"`
+	RequestTypesCreated []*RequestType `gorm:"foreignKey:CreatedByID;references:ID;constraint:fk_request_types_created_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"request_types_created"`
+	RequestTypesUpdated []*RequestType `gorm:"foreignKey:UpdatedByID;references:ID;constraint:fk_request_types_updated_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"request_types_updated"`
+	ServicesCreated     []*Service     `gorm:"foreignKey:CreatedByID;references:ID;constraint:fk_services_created_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"services_created"`
+	ServicesUpdated     []*Service     `gorm:"foreignKey:UpdatedByID;references:ID;constraint:fk_services_updated_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"services_updated"`
 }

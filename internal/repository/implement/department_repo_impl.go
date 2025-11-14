@@ -61,7 +61,7 @@ func (r *departmentRepoImpl) FindByID(ctx context.Context, id int64) (*model.Dep
 	return &department, nil
 }
 
-func (r *departmentRepoImpl) FindAllWithCreatedByAndUpdatedBy(ctx context.Context) ([]*model.Department, error) {
+func (r *departmentRepoImpl) FindAllWithDetails(ctx context.Context) ([]*model.Department, error) {
 	var departments []*model.Department
 	if err := r.db.WithContext(ctx).Preload("CreatedBy").Preload("UpdatedBy").Order("name ASC").Find(&departments).Error; err != nil {
 		return nil, err

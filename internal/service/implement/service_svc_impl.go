@@ -77,6 +77,25 @@ func (s *serviceSvcImpl) GetServiceTypesForAdmin(ctx context.Context) ([]*model.
 		return nil, err
 	}
 
+	if len(serviceTypes) == 0 {
+		return serviceTypes, nil
+	}
+
+	serviceTypeIDs := make([]int64, len(serviceTypes))
+	for i, serviceType := range serviceTypes {
+		serviceTypeIDs[i] = serviceType.ID
+	}
+
+	serviceCounts, err := s.serviceRepo.CountServiceByServiceTypeID(ctx, serviceTypeIDs)
+	if err != nil {
+		s.logger.Error("count service by service type ID failed", zap.Error(err))
+		return nil, err
+	}
+
+	for _, serviceType := range serviceTypes {
+		serviceType.ServiceCount = serviceCounts[serviceType.ID]
+	}
+
 	return serviceTypes, nil
 }
 

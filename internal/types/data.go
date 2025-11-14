@@ -42,3 +42,8 @@ type StaffCountResult struct {
 	DepartmentID int64 `gorm:"column:department_id"`
 	StaffCount   int64 `gorm:"column:staff_count"`
 }
+
+type ServiceCountResult struct {
+	ServiceTypeID int64 `gorm:"column:service_type_id"`
+	ServiceCount  int64 `gorm:"column:service_count"`
+}

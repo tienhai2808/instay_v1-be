@@ -40,4 +40,6 @@ type ServiceRepository interface {
 	FindServiceByIDWithServiceImages(ctx context.Context, serviceID int64) (*model.Service, error)
 
 	DeleteService(ctx context.Context, serviceID int64) error
+
+	CountServiceByServiceTypeID(ctx context.Context, serviceTypeIDs []int64) (map[int64]int64, error)
 }
