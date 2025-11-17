@@ -56,4 +56,6 @@ var (
 	ErrHasServiceImageNotFound = errors.New("has service image not found")
 
 	ErrRequestTypeAlreadyExists = errors.New("request type already exists")
+
+	ErrRoomTypeAlreadyExists = errors.New("room type already exists")
 )

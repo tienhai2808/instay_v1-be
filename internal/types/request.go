@@ -158,3 +158,7 @@ type UpdateRequestTypeRequest struct {
 	Name         *string `json:"name" binding:"omitempty,min=2"`
 	DepartmentID *int64  `json:"department_id" binding:"omitempty"`
 }
+
+type CreateRoomTypeRequest struct {
+	Name         string `json:"name" binding:"required,min=2"`
+}
