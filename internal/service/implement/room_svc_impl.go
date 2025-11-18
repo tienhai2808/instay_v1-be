@@ -131,7 +131,7 @@ func (s *roomSvcImpl) CreateRoom(ctx context.Context, userID int64, req types.Cr
 
 	floor, err := s.roomRepo.FindFloorByName(ctx, req.Floor)
 	if err != nil {
-		s.logger.Error("find floor bay name failed", zap.String("name", req.Floor), zap.Error(err))
+		s.logger.Error("find floor by name failed", zap.String("name", req.Floor), zap.Error(err))
 		return err
 	}
 	if floor == nil {
@@ -170,6 +170,83 @@ func (s *roomSvcImpl) CreateRoom(ctx context.Context, userID int64, req types.Cr
 			return common.ErrRoomTypeNotFound
 		}
 		s.logger.Error("create room failed", zap.Error(err))
+		return err
+	}
+
+	return nil
+}
+
+func (s *roomSvcImpl) UpdateRoom(ctx context.Context, roomID, userID int64, req types.UpdateRoomRequest) error {
+	room, err := s.roomRepo.FindRoomByIDWithFloor(ctx, roomID)
+	if err != nil {
+		s.logger.Error("find room by ID failed", zap.Int64("id", roomID), zap.Error(err))
+		return err
+	}
+	if room == nil {
+		return common.ErrRoomNotFound
+	}
+
+	updateData := map[string]any{}
+
+	if req.Name != nil && room.Name != *req.Name {
+		updateData["name"] = *req.Name
+		updateData["slug"] = common.GenerateSlug(*req.Name)
+	}
+	if req.RoomTypeID != nil && room.RoomTypeID != *req.RoomTypeID {
+		updateData["room_type_id"] = *req.RoomTypeID
+	}
+	if req.Floor != nil && room.Floor.Name != *req.Floor {
+		floor, err := s.roomRepo.FindFloorByName(ctx, *req.Floor)
+		if err != nil {
+			s.logger.Error("find floor by name failed", zap.String("name", *req.Floor), zap.Error(err))
+			return err
+		}
+		if floor == nil {
+			floorID, err := s.sfGen.NextID()
+			if err != nil {
+				s.logger.Error("generate floor ID failed", zap.Error(err))
+				return err
+			}
+
+			floor = &model.Floor{
+				ID:   floorID,
+				Name: *req.Floor,
+			}
+
+			if err = s.roomRepo.CreateFloor(ctx, floor); err != nil {
+				s.logger.Error("create floor failed", zap.Error(err))
+				return err
+			}
+		}
+		updateData["floor_id"] = floor.ID
+	}
+
+	if len(updateData) > 0 {
+		updateData["updated_by_id"] = userID
+		if err = s.roomRepo.UpdateRoom(ctx, roomID, updateData); err != nil {
+			if ok, _ := common.IsUniqueViolation(err); ok {
+				return common.ErrRoomAlreadyExists
+			}
+			if common.IsForeignKeyViolation(err) {
+				return common.ErrRoomTypeNotFound
+			}
+			s.logger.Error("update room failed", zap.Int64("id", roomID), zap.Error(err))
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *roomSvcImpl) DeleteRoom(ctx context.Context, roomID int64) error {
+	if err := s.roomRepo.DeleteRoom(ctx, roomID); err != nil {
+		if errors.Is(err, common.ErrRoomNotFound) {
+			return err
+		}
+		if common.IsForeignKeyViolation(err) {
+			return common.ErrProtectedRecord
+		}
+		s.logger.Error("delete room failed", zap.Int64("id", roomID), zap.Error(err))
 		return err
 	}
 

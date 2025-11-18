@@ -95,3 +95,39 @@ func (r *roomRepoImpl) FindFloorByName(ctx context.Context, floorName string) (*
 func (r *roomRepoImpl) CreateFloor(ctx context.Context, floor *model.Floor) error {
 	return r.db.WithContext(ctx).Create(floor).Error
 }
+
+func (r *roomRepoImpl) FindRoomByIDWithFloor(ctx context.Context, roomID int64) (*model.Room, error) {
+	var room model.Room
+	if err := r.db.WithContext(ctx).Preload("Floor").Where("id = ?", roomID).First(&room).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &room, nil
+}
+
+func (r *roomRepoImpl) UpdateRoom(ctx context.Context, roomID int64, updateData map[string]any) error {
+	result := r.db.WithContext(ctx).Model(&model.Room{}).Where("id = ?", roomID).Updates(updateData)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return common.ErrRoomNotFound
+	}
+	return nil
+}
+
+func (r *roomRepoImpl) DeleteRoom(ctx context.Context, roomID int64) error {
+	result := r.db.WithContext(ctx).Where("id = ?", roomID).Delete(&model.Room{})
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return common.ErrRoomNotFound
+	}
+
+	return nil
+}

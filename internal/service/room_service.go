@@ -17,4 +17,8 @@ type RoomService interface {
 	DeleteRoomType(ctx context.Context, roomTypeID int64) error
 
 	CreateRoom(ctx context.Context, userID int64, req types.CreateRoomRequest) error
+
+	UpdateRoom(ctx context.Context, roomID, userID int64, req types.UpdateRoomRequest) error
+
+	DeleteRoom(ctx context.Context, roomID int64) error
 }

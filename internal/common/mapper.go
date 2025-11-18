@@ -267,6 +267,7 @@ func ToServiceResponse(service *model.Service) *types.ServiceResponse {
 		Name:          service.Name,
 		Price:         service.Price,
 		IsActive:      service.IsActive,
+		Description:   service.Description,
 		CreatedAt:     service.CreatedAt,
 		UpdatedAt:     service.UpdatedAt,
 		ServiceType:   ToSimpleServiceTypeResponse(service.ServiceType),
@@ -324,8 +325,8 @@ func ToRoomTypeResponse(roomType *model.RoomType) *types.RoomTypeResponse {
 	}
 
 	return &types.RoomTypeResponse{
-		ID: roomType.ID,
-		Name: roomType.Name,
+		ID:        roomType.ID,
+		Name:      roomType.Name,
 		CreatedAt: roomType.CreatedAt,
 		UpdatedAt: roomType.UpdatedAt,
 		CreatedBy: ToBasicUserResponse(roomType.CreatedBy),

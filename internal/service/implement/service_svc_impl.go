@@ -417,6 +417,9 @@ func (s *serviceSvcImpl) DeleteService(ctx context.Context, serviceID int64) err
 		if errors.Is(err, common.ErrServiceNotFound) {
 			return err
 		}
+		if common.IsForeignKeyViolation(err) {
+			return common.ErrProtectedRecord
+		}
 		s.logger.Error("delete service failed", zap.Int64("id", serviceID), zap.Error(err))
 		return err
 	}

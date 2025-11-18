@@ -174,3 +174,9 @@ type CreateRoomRequest struct {
 	Floor      string `json:"floor" binding:"required"`
 	RoomTypeID int64  `json:"room_type_id" binding:"required"`
 }
+
+type UpdateRoomRequest struct {
+	Name       *string `json:"name" binding:"omitempty,min=2"`
+	Floor      *string `json:"floor" binding:"omitempty"`
+	RoomTypeID *int64  `json:"room_type_id" binding:"omitempty"`
+}

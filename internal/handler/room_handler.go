@@ -179,3 +179,72 @@ func (h *RoomHandler) CreateRoom(c *gin.Context) {
 
 	common.ToAPIResponse(c, http.StatusCreated, "Room created successfully", nil)
 }
+
+func (h *RoomHandler) UpdateRoom(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	roomIDStr := c.Param("id")
+	roomID, err := strconv.ParseInt(roomIDStr, 10, 64)
+	if err != nil {
+		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		return
+	}
+
+	userAny, exists := c.Get("user")
+	if !exists {
+		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		return
+	}
+
+	user, ok := userAny.(*types.UserData)
+	if !ok {
+		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		return
+	}
+
+	var req types.UpdateRoomRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		mess := common.HandleValidationError(err)
+		common.ToAPIResponse(c, http.StatusBadRequest, mess, nil)
+		return
+	}
+
+	if err = h.roomSvc.UpdateRoom(ctx, roomID, user.ID, req); err != nil {
+		switch err {
+		case common.ErrRoomTypeNotFound, common.ErrRoomNotFound:
+			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
+		case common.ErrRoomAlreadyExists:
+			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
+		default:
+			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		}
+		return
+	}
+
+	common.ToAPIResponse(c, http.StatusOK, "Room updated successfully", nil)
+}
+
+func (h *RoomHandler) DeleteRoom(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	roomIDStr := c.Param("id")
+	roomID, err := strconv.ParseInt(roomIDStr, 10, 64)
+	if err != nil {
+		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		return
+	}
+
+	if err = h.roomSvc.DeleteRoom(ctx, roomID); err != nil {
+		switch err {
+		case common.ErrRoomNotFound:
+			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
+		case common.ErrProtectedRecord:
+			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
+		default:
+			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		}
+		return
+	}
+}

@@ -22,4 +22,10 @@ type RoomRepository interface {
 	FindFloorByName(ctx context.Context, floorName string) (*model.Floor, error)
 
 	CreateFloor(ctx context.Context, floor *model.Floor) error
+
+	FindRoomByIDWithFloor(ctx context.Context, roomID int64) (*model.Room, error)
+
+	UpdateRoom(ctx context.Context, roomID int64, updateData map[string]any) error
+
+	DeleteRoom(ctx context.Context, roomID int64) error
 }

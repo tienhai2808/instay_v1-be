@@ -381,7 +381,7 @@ func (h *ServiceHandler) UpdateService(c *gin.Context) {
 		case common.ErrServiceNotFound, common.ErrServiceTypeNotFound, common.ErrHasServiceImageNotFound:
 			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
 		case common.ErrServiceAlreadyExists:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
+			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
 		default:
 			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
 		}
@@ -444,6 +444,8 @@ func (h *ServiceHandler) DeleteService(c *gin.Context) {
 		switch err {
 		case common.ErrServiceNotFound:
 			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
+		case common.ErrProtectedRecord:
+			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
 		default:
 			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
 		}
