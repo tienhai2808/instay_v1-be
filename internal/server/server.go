@@ -14,8 +14,6 @@ import (
 	"github.com/InstaySystem/is-be/internal/initialization"
 	"github.com/InstaySystem/is-be/internal/router"
 	"github.com/InstaySystem/is-be/internal/worker"
-
-	// "github.com/emersion/go-imap/client"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -25,13 +23,13 @@ import (
 )
 
 type Server struct {
-	cfg  *config.Config
-	http *http.Server
-	db   *initialization.DB
-	rdb  *redis.Client
-	mq   *initialization.MQ
-	// imap   *client.Client
-	logger *zap.Logger
+	cfg          *config.Config
+	http         *http.Server
+	db           *initialization.DB
+	rdb          *redis.Client
+	mq           *initialization.MQ
+	listenWorker *worker.ListenWorker
+	logger       *zap.Logger
 }
 
 func NewServer(cfg *config.Config) (*Server, error) {
@@ -55,11 +53,6 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	// imap, err := initialization.InitIMAP(cfg)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	sf, err := initialization.InitSnowFlake()
 	if err != nil {
 		return nil, err
@@ -73,8 +66,10 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	ctn := container.NewContainer(cfg, db.Gorm, rdb, s3, sf, logger, mq.Conn, mq.Chan)
 
 	mqWorker := worker.NewMQWorker(cfg, ctn.MQProvider, ctn.SMTPProvider, s3.Client, logger)
-	go mqWorker.StartSendAuthEmail()
-	go mqWorker.StartDeleteFile()
+	mqWorker.Start()
+
+	listenWorker := worker.NewListenWorker(cfg, ctn.BookingCtx.Repo, ctn.SfGen, logger)
+	listenWorker.Start()
 
 	r := gin.Default()
 	if err = r.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
@@ -119,7 +114,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		db,
 		rdb,
 		mq,
-		// imap,
+		listenWorker,
 		logger,
 	}, nil
 }
@@ -129,6 +124,10 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Shutdown(ctx context.Context) {
+	if s.listenWorker != nil {
+		s.listenWorker.Stop()
+	}
+	
 	if s.db != nil {
 		s.db.Close()
 	}
@@ -140,10 +139,6 @@ func (s *Server) Shutdown(ctx context.Context) {
 	if s.mq != nil {
 		s.mq.Close()
 	}
-
-	// if s.imap != nil {
-	// 	s.imap.Logout()
-	// }
 
 	if s.logger != nil {
 		s.logger.Sync()

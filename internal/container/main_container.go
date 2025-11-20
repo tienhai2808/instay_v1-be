@@ -25,10 +25,12 @@ type Container struct {
 	ServiceCtn    *ServiceContainer
 	RequestCtn    *RequestContainer
 	RoomCtn       *RoomContainer
+	BookingCtx    *BookingContainer
 	AuthMid       *middleware.AuthMiddleware
 	ReqMid        *middleware.RequestMiddleware
 	SMTPProvider  smtp.SMTPProvider
 	MQProvider    mq.MessageQueueProvider
+	SfGen         snowflake.Generator
 }
 
 func NewContainer(
@@ -55,6 +57,7 @@ func NewContainer(
 	serviceCtn := NewServiceContainer(db, sfGen, logger, mqProvider)
 	requestCtn := NewRequestContainer(db, sfGen, logger)
 	roomCtn := NewRoomContainer(db, sfGen, logger)
+	bookingCtn := NewBookingContainer(db)
 
 	authMid := middleware.NewAuthMiddleware(cfg.JWT.AccessName, cfg.JWT.RefreshName, userCtn.Repo, jwtProvider, logger, cacheProvider)
 	reqMid := middleware.NewRequestMiddleware(logger)
@@ -67,9 +70,11 @@ func NewContainer(
 		serviceCtn,
 		requestCtn,
 		roomCtn,
+		bookingCtn,
 		authMid,
 		reqMid,
 		smtpProvider,
 		mqProvider,
+		sfGen,
 	}
 }
