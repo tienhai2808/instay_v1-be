@@ -52,3 +52,8 @@ type RoomCountResult struct {
 	RoomTypeID int64 `gorm:"column:room_type_id"`
 	RoomCount  int64 `gorm:"column:room_count"`
 }
+
+type OrderRoomData struct {
+	ID       int64     `json:"id"`
+	ExpiredAt time.Time `json:"expired_at"`
+}

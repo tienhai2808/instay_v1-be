@@ -20,8 +20,9 @@ var allModels = []any{
 	&model.RoomType{},
 	&model.Floor{},
 	&model.Room{},
-	&model.BookedRoom{},
 	&model.Booking{},
+	&model.OrderRoom{},
+	&model.OrderService{},
 }
 
 type DB struct {

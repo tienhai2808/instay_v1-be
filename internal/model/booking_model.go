@@ -21,4 +21,6 @@ type Booking struct {
 	MealPlan           string    `gorm:"type:varchar(150)" json:"meal_plan"`
 	BookingPreferences string    `gorm:"type:varchar(255)" json:"booking_references"`
 	BookingConditions  string    `gorm:"type:varchar(255)" json:"booking_conditions"`
+
+	OrderRooms []*OrderRoom `gorm:"foreignKey:BookingID;references:ID;constraint:fk_order_rooms_booking,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"order_rooms"`
 }

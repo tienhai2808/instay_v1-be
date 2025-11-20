@@ -39,20 +39,5 @@ type Room struct {
 	Floor       *Floor        `gorm:"foreignKey:FloorID;references:ID;constraint:fk_rooms_floor,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"floor"`
 	CreatedBy   *User         `gorm:"foreignKey:CreatedByID;references:ID;constraint:fk_room_types_created_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"created_by"`
 	UpdatedBy   *User         `gorm:"foreignKey:UpdatedByID;references:ID;constraint:fk_room_types_updated_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"updated_by"`
-	BookedRooms []*BookedRoom `gorm:"foreignKey:RoomID;references:ID;constraint:fk_booked_rooms_room,OnUpdate:CASCADE,OnDelete:CASCADE" json:"booked_rooms"`
-}
-
-type BookedRoom struct {
-	ID          int64     `gorm:"type:bigint;primaryKey" json:"id"`
-	StartAt     time.Time `json:"start_at"`
-	EndAt       time.Time `json:"end_at"`
-	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt   time.Time `gorm:"autoUpdateTime" json:"updated_at"`
-	CreatedByID int64     `gorm:"type:bigint;not null" json:"created_by_id"`
-	UpdatedByID int64     `gorm:"type:bigint;not null" json:"updated_by_id"`
-	RoomID      int64     `gorm:"type:bigint;not null" json:"room_id"`
-
-	Room      *Room `gorm:"foreignKey:RoomID;references:ID;constraint:fk_booked_rooms_room,OnUpdate:CASCADE,OnDelete:CASCADE" json:"room"`
-	CreatedBy *User `gorm:"foreignKey:CreatedByID;references:ID;constraint:fk_booked_rooms_created_by,OnUpdate:CASCADE,OnDelete:CASCADE" json:"created_by"`
-	UpdatedBy *User `gorm:"foreignKey:UpdatedByID;references:ID;constraint:fk_booked_rooms_updated_by,OnUpdate:CASCADE,OnDelete:CASCADE" json:"updated_by"`
+	OrderRooms []*OrderRoom `gorm:"foreignKey:RoomID;references:ID;constraint:fk_order_rooms_room,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"order_rooms"`
 }

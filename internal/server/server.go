@@ -68,7 +68,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	mqWorker := worker.NewMQWorker(cfg, ctn.MQProvider, ctn.SMTPProvider, s3.Client, logger)
 	mqWorker.Start()
 
-	listenWorker := worker.NewListenWorker(cfg, ctn.BookingCtx.Repo, ctn.SfGen, logger)
+	listenWorker := worker.NewListenWorker(cfg, ctn.BookingCtn.Repo, ctn.SfGen, logger)
 	listenWorker.Start()
 
 	r := gin.Default()
@@ -97,7 +97,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	router.ServiceRouter(api, ctn.ServiceCtn.Hdl, ctn.AuthMid)
 	router.RequestRouter(api, ctn.RequestCtn.Hdl, ctn.AuthMid)
 	router.RoomRouter(api, ctn.RoomCtn.Hdl, ctn.AuthMid)
-	router.BookingRouter(api, ctn.BookingCtx.Hdl, ctn.AuthMid)
+	router.BookingRouter(api, ctn.BookingCtn.Hdl, ctn.AuthMid)
 
 	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 

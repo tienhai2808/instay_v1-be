@@ -1,6 +1,7 @@
 package common
 
 import (
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,6 +12,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gosimple/slug"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/mr-tron/base58"
 )
 
 func HandleValidationError(err error) string {
@@ -58,8 +60,8 @@ func HandleValidationError(err error) string {
 
 func ToAPIResponse(c *gin.Context, statusCode int, message string, data any) {
 	c.JSON(statusCode, types.APIResponse{
-		Message:    message,
-		Data:       data,
+		Message: message,
+		Data:    data,
 	})
 }
 
@@ -84,4 +86,10 @@ func IsForeignKeyViolation(err error) bool {
 
 func GenerateSlug(str string) string {
 	return slug.Make(str)
+}
+
+func GenerateBase58ID(size int) string {
+	b := make([]byte, size)
+	rand.Read(b)
+	return base58.Encode(b)
 }

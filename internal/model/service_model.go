@@ -36,6 +36,7 @@ type Service struct {
 	CreatedBy     *User           `gorm:"foreignKey:CreatedByID;references:ID;constraint:fk_services_created_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"created_by"`
 	UpdatedBy     *User           `gorm:"foreignKey:UpdatedByID;references:ID;constraint:fk_services_created_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"updated_by"`
 	ServiceImages []*ServiceImage `gorm:"foreignKey:ServiceID;references:ID;constraint:fk_service_images_service,OnUpdate:CASCADE,OnDelete:CASCADE" json:"service_images"`
+	OrderServices []*OrderService `gorm:"foreignKey:ServiceID;references:ID;constraint:fk_order_services_service,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"order_services"`
 }
 
 type ServiceImage struct {

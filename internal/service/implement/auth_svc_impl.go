@@ -155,6 +155,7 @@ func (s *authSvcImpl) ForgotPassword(ctx context.Context, email string) (string,
 	redisKey := fmt.Sprintf("instay:forgot-password:%s", forgotPasswordToken)
 	if err = s.cacheProvider.SetObject(ctx, redisKey, bytes, 3*time.Minute); err != nil {
 		s.logger.Error("save forgot password data failed", zap.Error(err))
+		return "", err
 	}
 
 	emailMsg := types.AuthEmailMessage{
