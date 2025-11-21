@@ -14,6 +14,8 @@ type JWTProvider interface {
 	ParseToken(tokenStr string) (int64, string, int64, error)
 
 	GenerateGuestToken(orderRoomID int64, ttl time.Duration) (string, error)
+
+	ParseGuestToken(tokenStr string) (int64, error)
 }
 
 type jwtProviderImpl struct {

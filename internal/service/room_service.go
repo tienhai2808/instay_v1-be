@@ -12,6 +12,8 @@ type RoomService interface {
 
 	GetRoomTypesForAdmin(ctx context.Context) ([]*model.RoomType, error)
 
+	GetRoomTypesForGuest(ctx context.Context) ([]*model.RoomType, error)
+
 	UpdateRoomType(ctx context.Context, roomTypeID, userID int64, req types.UpdateRoomTypeRequest) error
 
 	DeleteRoomType(ctx context.Context, roomTypeID int64) error
@@ -23,4 +25,6 @@ type RoomService interface {
 	DeleteRoom(ctx context.Context, roomID int64) error
 
 	GetFloors(ctx context.Context) ([]*model.Floor, error)
+
+	GetRoomsForAdmin(ctx context.Context, query types.RoomPaginationQuery) ([]*model.Room, *types.MetaResponse, error)
 }

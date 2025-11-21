@@ -61,7 +61,7 @@ func NewContainer(
 	bookingCtn := NewBookingContainer(db, logger)
 	orderCtn := NewOrderContainer(db, sfGen, logger, cacheProvider, jwtProvider, cfg.JWT.GuestName)
 
-	authMid := middleware.NewAuthMiddleware(cfg.JWT.AccessName, cfg.JWT.RefreshName, userCtn.Repo, jwtProvider, logger, cacheProvider)
+	authMid := middleware.NewAuthMiddleware(cfg.JWT.AccessName, cfg.JWT.RefreshName, cfg.JWT.GuestName, userCtn.Repo, jwtProvider, logger, cacheProvider)
 	reqMid := middleware.NewRequestMiddleware(logger)
 
 	return &Container{

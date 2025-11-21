@@ -4,12 +4,15 @@ import (
 	"context"
 
 	"github.com/InstaySystem/is-be/internal/model"
+	"github.com/InstaySystem/is-be/internal/types"
 )
 
 type RoomRepository interface {
 	CreateRoomType(ctx context.Context, roomType *model.RoomType) error
 
 	FindAllRoomTypesWithDetails(ctx context.Context) ([]*model.RoomType, error)
+
+	FindAllRoomTypes(ctx context.Context) ([]*model.RoomType, error)
 
 	UpdateRoomType(ctx context.Context, roomTypeID int64, updateData map[string]any) error
 
@@ -30,4 +33,6 @@ type RoomRepository interface {
 	DeleteRoom(ctx context.Context, roomID int64) error
 
 	FindAllFloors(ctx context.Context) ([]*model.Floor, error)
+
+	FindAllRoomsWithDetailsPaginated(ctx context.Context, query types.RoomPaginationQuery) ([]*model.Room, int64, error)
 }

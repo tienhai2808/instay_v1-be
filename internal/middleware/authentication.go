@@ -20,6 +20,7 @@ import (
 type AuthMiddleware struct {
 	accessName    string
 	refreshName   string
+	guestName     string
 	userRepo      repository.UserRepository
 	jwtProvider   jwt.JWTProvider
 	logger        *zap.Logger
@@ -27,7 +28,7 @@ type AuthMiddleware struct {
 }
 
 func NewAuthMiddleware(
-	accessName, refreshName string,
+	accessName, refreshName, guestName string,
 	userRepo repository.UserRepository,
 	jwtProvider jwt.JWTProvider,
 	logger *zap.Logger,
@@ -36,6 +37,7 @@ func NewAuthMiddleware(
 	return &AuthMiddleware{
 		accessName,
 		refreshName,
+		guestName,
 		userRepo,
 		jwtProvider,
 		logger,
@@ -214,6 +216,29 @@ func (m *AuthMiddleware) HasRefreshToken() gin.HandlerFunc {
 		c.Set("user_id", user.ID)
 		c.Set("user_role", user.Role)
 
+		c.Next()
+	}
+}
+
+func (m *AuthMiddleware) HasGuestToken() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		guestToken, err := c.Cookie(m.guestName)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, types.APIResponse{
+				Message: common.ErrUnAuth.Error(),
+			})
+			return
+		}
+
+		orderRoomID, err := m.jwtProvider.ParseGuestToken(guestToken)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
+				Message: err.Error(),
+			})
+			return
+		}
+
+		c.Set("order_room_id", orderRoomID)
 		c.Next()
 	}
 }

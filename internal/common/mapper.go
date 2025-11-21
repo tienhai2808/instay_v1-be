@@ -44,6 +44,36 @@ func ToSimpleDepartmentResponse(department *model.Department) *types.SimpleDepar
 	}
 }
 
+func ToRoomResponse(room *model.Room) *types.RoomResponse {
+	if room == nil {
+		return nil
+	}
+
+	return &types.RoomResponse{
+		ID:        room.ID,
+		Name:      room.Name,
+		CreatedAt: room.CreatedAt,
+		UpdatedAt: room.UpdatedAt,
+		CreatedBy: ToBasicUserResponse(room.CreatedBy),
+		UpdatedBy: ToBasicUserResponse(room.UpdatedBy),
+		RoomType:  ToSimpleRoomTypeResponse(room.RoomType),
+		Floor:     ToFloorResponse(room.Floor),
+	}
+}
+
+func ToRoomsResponse(rooms []*model.Room) []*types.RoomResponse {
+	if len(rooms) == 0 {
+		return make([]*types.RoomResponse, 0)
+	}
+
+	roomsRes := make([]*types.RoomResponse, 0, len(rooms))
+	for _, room := range rooms {
+		roomsRes = append(roomsRes, ToRoomResponse(room))
+	}
+
+	return roomsRes
+}
+
 func ToUserData(user *model.User) *types.UserData {
 	return &types.UserData{
 		ID:         user.ID,
@@ -329,6 +359,30 @@ func ToRoomTypesResponse(roomTypes []*model.RoomType) []*types.RoomTypeResponse 
 	roomTypesRes := make([]*types.RoomTypeResponse, 0, len(roomTypes))
 	for _, roomType := range roomTypes {
 		roomTypesRes = append(roomTypesRes, ToRoomTypeResponse(roomType))
+	}
+
+	return roomTypesRes
+}
+
+func ToSimpleRoomTypeResponse(roomType *model.RoomType) *types.SimpleRoomTypeResponse {
+	if roomType == nil {
+		return nil
+	}
+
+	return &types.SimpleRoomTypeResponse{
+		ID:   roomType.ID,
+		Name: roomType.Name,
+	}
+}
+
+func ToSimpleRoomTypesResponse(roomTypes []*model.RoomType) []*types.SimpleRoomTypeResponse {
+	if len(roomTypes) == 0 {
+		return make([]*types.SimpleRoomTypeResponse, 0)
+	}
+
+	roomTypesRes := make([]*types.SimpleRoomTypeResponse, 0, len(roomTypes))
+	for _, roomType := range roomTypes {
+		roomTypesRes = append(roomTypesRes, ToSimpleRoomTypeResponse(roomType))
 	}
 
 	return roomTypesRes

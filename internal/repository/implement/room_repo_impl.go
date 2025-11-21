@@ -2,7 +2,9 @@ package implement
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"strings"
 
 	"github.com/InstaySystem/is-be/internal/common"
 	"github.com/InstaySystem/is-be/internal/model"
@@ -119,6 +121,26 @@ func (r *roomRepoImpl) UpdateRoom(ctx context.Context, roomID int64, updateData 
 	return nil
 }
 
+func (r *roomRepoImpl) FindAllRoomsWithDetailsPaginated(ctx context.Context, query types.RoomPaginationQuery) ([]*model.Room, int64, error) {
+	var rooms []*model.Room
+	var total int64
+
+	db := r.db.WithContext(ctx).Preload("RoomType").Preload("Floor").Preload("CreatedBy").Model(&model.Room{})
+	db = applyRoomFilters(db, query)
+
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	db = applyRoomSorting(db, query)
+	offset := (query.Page - 1) * query.Limit
+	if err := db.Offset(int(offset)).Limit(int(query.Limit)).Find(&rooms).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return rooms, total, nil
+}
+
 func (r *roomRepoImpl) DeleteRoom(ctx context.Context, roomID int64) error {
 	result := r.db.WithContext(ctx).Where("id = ?", roomID).Delete(&model.Room{})
 	if result.Error != nil {
@@ -139,4 +161,55 @@ func (r *roomRepoImpl) FindAllFloors(ctx context.Context) ([]*model.Floor, error
 	}
 
 	return floors, nil
+}
+
+func (r *roomRepoImpl) FindAllRoomTypes(ctx context.Context) ([]*model.RoomType, error) {
+	var roomTypes []*model.RoomType
+	if err := r.db.WithContext(ctx).Find(&roomTypes).Error; err != nil {
+		return nil, err
+	}
+
+	return roomTypes, nil
+}
+
+func applyRoomFilters(db *gorm.DB, query types.RoomPaginationQuery) *gorm.DB {
+	if query.Search != "" {
+		searchTerm := "%" + strings.ToLower(query.Search) + "%"
+		db = db.Where(
+			"LOWER(name) LIKE @q OR LOWER(slug) LIKE @q",
+			sql.Named("q", searchTerm),
+		)
+	}
+
+	if query.FloorID != 0 {
+		db = db.Where("floor_id = ?", query.FloorID)
+	}
+
+	if query.RoomTypeID != 0 {
+		db = db.Where("room_type_id = ?", query.RoomTypeID)
+	}
+
+	return db
+}
+
+func applyRoomSorting(db *gorm.DB, query types.RoomPaginationQuery) *gorm.DB {
+	if query.Sort == "" {
+		query.Sort = "created_at"
+	}
+	if query.Order == "" {
+		query.Order = "desc"
+	}
+
+	allowedSorts := map[string]bool{
+		"created_at": true,
+		"name":       true,
+	}
+
+	if allowedSorts[query.Sort] {
+		db = db.Order(query.Sort + " " + strings.ToUpper(query.Order))
+	} else {
+		db = db.Order("created_at DESC")
+	}
+
+	return db
 }

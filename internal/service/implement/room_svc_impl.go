@@ -86,6 +86,16 @@ func (s *roomSvcImpl) GetRoomTypesForAdmin(ctx context.Context) ([]*model.RoomTy
 	return roomTypes, nil
 }
 
+func (s *roomSvcImpl) GetRoomTypesForGuest(ctx context.Context) ([]*model.RoomType, error) {
+	roomTypes, err := s.roomRepo.FindAllRoomTypes(ctx)
+	if err != nil {
+		s.logger.Error("get room types for guest failed", zap.Error(err))
+		return nil, err
+	}
+
+	return roomTypes, nil
+}
+
 func (s *roomSvcImpl) UpdateRoomType(ctx context.Context, roomTypeID, userID int64, req types.UpdateRoomTypeRequest) error {
 	updateData := map[string]any{
 		"name":          req.Name,
@@ -174,6 +184,37 @@ func (s *roomSvcImpl) CreateRoom(ctx context.Context, userID int64, req types.Cr
 	}
 
 	return nil
+}
+
+func (s *roomSvcImpl) GetRoomsForAdmin(ctx context.Context, query types.RoomPaginationQuery) ([]*model.Room, *types.MetaResponse, error) {
+	if query.Page == 0 {
+		query.Page = 1
+	}
+	if query.Limit == 0 {
+		query.Limit = 10
+	}
+
+	rooms, total, err := s.roomRepo.FindAllRoomsWithDetailsPaginated(ctx, query)
+	if err != nil {
+		s.logger.Error("find all rooms paginated failed", zap.Error(err))
+		return nil, nil, err
+	}
+
+	totalPages := uint32(total) / query.Limit
+	if uint32(total)%query.Limit != 0 {
+		totalPages++
+	}
+
+	meta := &types.MetaResponse{
+		Total:      uint64(total),
+		Page:       query.Page,
+		Limit:      query.Limit,
+		TotalPages: uint16(totalPages),
+		HasPrev:    query.Page > 1,
+		HasNext:    query.Page < totalPages,
+	}
+
+	return rooms, meta, nil
 }
 
 func (s *roomSvcImpl) UpdateRoom(ctx context.Context, roomID, userID int64, req types.UpdateRoomRequest) error {
