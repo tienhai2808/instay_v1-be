@@ -18,17 +18,21 @@ import (
 )
 
 type orderSvcImpl struct {
-	orderRepo     repository.OrderRepository
-	bookingRepo   repository.BookingRepository
-	sfGen         snowflake.Generator
-	logger        *zap.Logger
-	cacheProvider cache.CacheProvider
-	jwtProvider   jwt.JWTProvider
+	orderRepo        repository.OrderRepository
+	bookingRepo      repository.BookingRepository
+	serviceRepo      repository.ServiceRepository
+	notificationRepo repository.Notification
+	sfGen            snowflake.Generator
+	logger           *zap.Logger
+	cacheProvider    cache.CacheProvider
+	jwtProvider      jwt.JWTProvider
 }
 
 func NewOrderService(
 	orderRepo repository.OrderRepository,
 	bookingRepo repository.BookingRepository,
+	serviceRepo repository.ServiceRepository,
+	notificationRepo repository.Notification,
 	sfGen snowflake.Generator,
 	logger *zap.Logger,
 	cacheProvider cache.CacheProvider,
@@ -37,6 +41,8 @@ func NewOrderService(
 	return &orderSvcImpl{
 		orderRepo,
 		bookingRepo,
+		serviceRepo,
+		notificationRepo,
 		sfGen,
 		logger,
 		cacheProvider,
@@ -121,4 +127,62 @@ func (s *orderSvcImpl) VerifyOrderRoom(ctx context.Context, secretCode string) (
 	}
 
 	return guestToken, ttl, nil
+}
+
+func (s *orderSvcImpl) CreateOrderService(ctx context.Context, orderRoomID int64, req types.CreateOrderServiceRequest) (int64, error) {
+	orderServiceID, err := s.sfGen.NextID()
+	if err != nil {
+		s.logger.Error("generate order service ID failed", zap.Error(err))
+		return 0, err
+	}
+
+	service, err := s.serviceRepo.FindServiceByIDWithServiceType(ctx, req.ServiceID)
+	if err != nil {
+		s.logger.Error("find service by id failed", zap.Int64("id", req.ServiceID), zap.Error(err))
+		return 0, err
+	}
+	if service == nil {
+		return 0, common.ErrServiceNotFound
+	}
+
+	orderService := &model.OrderService{
+		ID:          orderServiceID,
+		OrderRoomID: orderRoomID,
+		ServiceID:   req.ServiceID,
+		Quantity:    req.Quantity,
+		TotalPrice:  float64(req.Quantity) * service.Price,
+		Status:      "pending",
+		GuestNote:   *req.GuestNote,
+	}
+
+	if err = s.orderRepo.CreateOrderService(ctx, orderService); err != nil {
+		if common.IsForeignKeyViolation(err) {
+			return 0, common.ErrOrderRoomNotFound
+		}
+		s.logger.Error("create order service failed", zap.Error(err))
+		return 0, err
+	}
+
+	notificationID, err := s.sfGen.NextID()
+	if err != nil {
+		s.logger.Error("generate notification ID failed", zap.Error(err))
+		return 0, err
+	}
+
+	content := "Có đơn đặt dịch vụ"
+	notification := &model.Notification{
+		ID:           notificationID,
+		DepartmentID: service.ServiceType.DepartmentID,
+		Type:         "service",
+		Receiver:     "department",
+		Content:      content,
+		ContentID:    service.ID,
+	}
+
+	if err = s.notificationRepo.CreateNotification(ctx, notification); err != nil {
+		s.logger.Error("create notification failed", zap.Error(err))
+		return 0, err
+	}
+
+	return orderServiceID, nil
 }

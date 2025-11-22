@@ -111,6 +111,18 @@ func (r *serviceRepoImpl) FindServiceByIDWithDetails(ctx context.Context, servic
 	return &service, nil
 }
 
+func (r *serviceRepoImpl) FindServiceByIDWithServiceType(ctx context.Context, serviceID int64) (*model.Service, error) {
+	var service model.Service
+	if err := r.db.WithContext(ctx).Preload("ServiceType").Where("id = ?", serviceID).First(&service).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &service, nil
+}
+
 func (r *serviceRepoImpl) DeleteServiceType(ctx context.Context, serviceTypeID int64) error {
 	result := r.db.WithContext(ctx).Where("id = ?", serviceTypeID).Delete(&model.ServiceType{})
 	if result.Error != nil {

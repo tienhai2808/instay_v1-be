@@ -19,3 +19,7 @@ func NewOrderRepository(db *gorm.DB) repository.OrderRepository {
 func (r *orderRepoImpl) CreateOrderRoom(ctx context.Context, orderRoom *model.OrderRoom) error {
 	return r.db.WithContext(ctx).Create(orderRoom).Error
 }
+
+func (r *orderRepoImpl) CreateOrderService(ctx context.Context, orderService *model.OrderService) error {
+	return r.db.WithContext(ctx).Create(orderService).Error
+}

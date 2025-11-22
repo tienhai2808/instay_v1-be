@@ -68,7 +68,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	mqWorker := worker.NewMQWorker(cfg, ctn.MQProvider, ctn.SMTPProvider, s3.Client, logger)
 	mqWorker.Start()
 
-	listenWorker := worker.NewListenWorker(cfg, ctn.BookingCtn.Repo, ctn.SfGen, logger)
+	listenWorker := worker.NewListenWorker(cfg, ctn.BookingRepo, ctn.SfGen, logger)
 	listenWorker.Start()
 
 	r := gin.Default()

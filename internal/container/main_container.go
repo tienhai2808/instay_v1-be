@@ -8,6 +8,8 @@ import (
 	"github.com/InstaySystem/is-be/internal/provider/jwt"
 	"github.com/InstaySystem/is-be/internal/provider/mq"
 	"github.com/InstaySystem/is-be/internal/provider/smtp"
+	"github.com/InstaySystem/is-be/internal/repository"
+	repoImpl "github.com/InstaySystem/is-be/internal/repository/implement"
 	"github.com/InstaySystem/is-be/pkg/bcrypt"
 	"github.com/InstaySystem/is-be/pkg/snowflake"
 	"github.com/rabbitmq/amqp091-go"
@@ -32,6 +34,7 @@ type Container struct {
 	SMTPProvider  smtp.SMTPProvider
 	MQProvider    mq.MessageQueueProvider
 	SfGen         snowflake.Generator
+	BookingRepo   repository.BookingRepository
 }
 
 func NewContainer(
@@ -51,17 +54,26 @@ func NewContainer(
 	mqProvider := mq.NewMessageQueueProvider(mqConn, mqChan, logger)
 	cacheProvider := cache.NewCacheProvider(rdb)
 
+	userRepo := repoImpl.NewUserRepository(db)
+	serviceRepo := repoImpl.NewServiceRepository(db)
+	roomRepo := repoImpl.NewRoomRepository(db)
+	requestRepo := repoImpl.NewRequestRepository(db)
+	departmentRepo := repoImpl.NewDepartmentRepository(db)
+	bookingRepo := repoImpl.NewBookingRepository(db)
+	orderRepo := repoImpl.NewOrderRepository(db)
+	notificationRepo := repoImpl.NewNotificationRepository(db)
+
 	fileCtn := NewFileContainer(cfg, s3, logger)
 	authCtn := NewAuthContainer(cfg, db, logger, bHash, jwtProvider, cacheProvider, mqProvider)
-	userCtn := NewUserContainer(db, sfGen, logger, bHash, cfg.JWT.RefreshExpiresIn, cacheProvider)
-	departmentCtn := NewDepartmentContainer(db, sfGen, logger)
-	serviceCtn := NewServiceContainer(db, sfGen, logger, mqProvider)
-	requestCtn := NewRequestContainer(db, sfGen, logger)
-	roomCtn := NewRoomContainer(db, sfGen, logger)
+	userCtn := NewUserContainer(userRepo, sfGen, logger, bHash, cfg.JWT.RefreshExpiresIn, cacheProvider)
+	departmentCtn := NewDepartmentContainer(departmentRepo, sfGen, logger)
+	serviceCtn := NewServiceContainer(db, serviceRepo, sfGen, logger, mqProvider)
+	requestCtn := NewRequestContainer(requestRepo, sfGen, logger)
+	roomCtn := NewRoomContainer(roomRepo, sfGen, logger)
 	bookingCtn := NewBookingContainer(db, logger)
-	orderCtn := NewOrderContainer(db, sfGen, logger, cacheProvider, jwtProvider, cfg.JWT.GuestName)
+	orderCtn := NewOrderContainer(orderRepo, bookingRepo, serviceRepo, notificationRepo, sfGen, logger, cacheProvider, jwtProvider, cfg.JWT.GuestName)
 
-	authMid := middleware.NewAuthMiddleware(cfg.JWT.AccessName, cfg.JWT.RefreshName, cfg.JWT.GuestName, userCtn.Repo, jwtProvider, logger, cacheProvider)
+	authMid := middleware.NewAuthMiddleware(cfg.JWT.AccessName, cfg.JWT.RefreshName, cfg.JWT.GuestName, userRepo, jwtProvider, logger, cacheProvider)
 	reqMid := middleware.NewRequestMiddleware(logger)
 
 	return &Container{
@@ -79,5 +91,6 @@ func NewContainer(
 		smtpProvider,
 		mqProvider,
 		sfGen,
+		bookingRepo,
 	}
 }

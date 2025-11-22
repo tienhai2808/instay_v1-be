@@ -210,3 +210,9 @@ type CreateOrderRoomRequest struct {
 type VerifyOrderRoomRequest struct {
 	SecretCode string `json:"secret_code" binding:"required"`
 }
+
+type CreateOrderServiceRequest struct {
+	ServiceID int64   `json:"service_id" binding:"required"`
+	Quantity  uint32  `json:"quantity" binding:"required,min=1"`
+	GuestNote *string `json:"guest_note" binding:"omitempty,min=1"`
+}

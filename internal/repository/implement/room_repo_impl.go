@@ -125,7 +125,7 @@ func (r *roomRepoImpl) FindAllRoomsWithDetailsPaginated(ctx context.Context, que
 	var rooms []*model.Room
 	var total int64
 
-	db := r.db.WithContext(ctx).Preload("RoomType").Preload("Floor").Preload("CreatedBy").Model(&model.Room{})
+	db := r.db.WithContext(ctx).Preload("RoomType").Preload("Floor").Preload("CreatedBy").Preload("UpdatedBy").Model(&model.Room{})
 	db = applyRoomFilters(db, query)
 
 	if err := db.Count(&total).Error; err != nil {

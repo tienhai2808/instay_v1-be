@@ -13,4 +13,9 @@ func OrderRouter(rg *gin.RouterGroup, hdl *handler.OrderHandler, authMid *middle
 	}
 
 	rg.POST("/orders/rooms/verify", hdl.VerifyOrderRoom)
+
+	guest := rg.Group("/orders", authMid.HasGuestToken())
+	{
+		guest.POST("/services", hdl.CreateOrderService)
+	}
 }

@@ -2,11 +2,10 @@ package container
 
 import (
 	"github.com/InstaySystem/is-be/internal/handler"
-	repoImpl "github.com/InstaySystem/is-be/internal/repository/implement"
+	"github.com/InstaySystem/is-be/internal/repository"
 	svcImpl "github.com/InstaySystem/is-be/internal/service/implement"
 	"github.com/InstaySystem/is-be/pkg/snowflake"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 )
 
 type RequestContainer struct {
@@ -14,12 +13,11 @@ type RequestContainer struct {
 }
 
 func NewRequestContainer(
-	db *gorm.DB,
+	requestRepo repository.RequestRepository,
 	sfGen snowflake.Generator,
 	logger *zap.Logger,
 ) *RequestContainer {
-	repo := repoImpl.NewRequestRepository(db)
-	svc := svcImpl.NewRequestService(repo, sfGen, logger)
+	svc := svcImpl.NewRequestService(requestRepo, sfGen, logger)
 	hdl := handler.NewRequestHandler(svc)
 
 	return &RequestContainer{hdl}
