@@ -6,7 +6,7 @@ type Notification struct {
 	ID           int64     `gorm:"type:bigint;primaryKey" json:"id"`
 	DepartmentID int64     `gorm:"type:bigint" json:"department_id"`
 	Type         string    `gorm:"type:varchar(20);not null;check:type IN ('service', 'request')" json:"type"`
-	Receiver     string    `gorm:"type:varchar(20);not null;check:receiver IN ('guest', 'department')" json:"receiver"`
+	Receiver     string    `gorm:"type:varchar(20);not null;check:receiver IN ('guest', 'staff')" json:"receiver"`
 	Content      string    `gorm:"type:text;not null" json:"content"`
 	ContentID    int64     `gorm:"type:bigint;not null" json:"content_id"`
 	IsRead       bool      `gorm:"type:boolean" json:"is_read"`

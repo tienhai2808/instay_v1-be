@@ -8,8 +8,12 @@ import (
 
 type Config struct {
 	Server struct {
-		APIPrefix string `mapstructure:"api_prefix"`
-		Port      int    `mapstructure:"port"`
+		APIPrefix      string        `mapstructure:"api_prefix"`
+		Port           int           `mapstructure:"port"`
+		WriteTimeout   time.Duration `mapstructure:"write_timeout"`
+		ReadTimeout    time.Duration `mapstructure:"read_timeout"`
+		IdleTimeout    time.Duration `mapstructure:"idle_timeout"`
+		MaxHeaderBytes int           `mapstructure:"max_header_bytes"`
 	} `mapstructure:"server"`
 
 	JWT struct {

@@ -10,4 +10,6 @@ type OrderRepository interface {
 	CreateOrderRoom(ctx context.Context, orderRoom *model.OrderRoom) error
 
 	CreateOrderService(ctx context.Context, orderService *model.OrderService) error
+
+	FindOrderRoomByIDWithRoom(ctx context.Context, orderRoomID int64) (*model.OrderRoom, error)
 }

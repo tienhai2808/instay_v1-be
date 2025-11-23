@@ -23,6 +23,8 @@ var allModels = []any{
 	&model.Booking{},
 	&model.OrderRoom{},
 	&model.OrderService{},
+	&model.Notification{},
+	&model.NotificationStaff{},
 }
 
 type DB struct {

@@ -38,6 +38,15 @@ type AuthEmailMessage struct {
 	Otp     string `json:"otp"`
 }
 
+type ServiceNotificationMessage struct {
+	Content     string  `json:"content"`
+	Type        string  `json:"type"`
+	ContentID   int64   `json:"content_id"`
+	Receiver    string  `json:"receiver"`
+	Department  *string `json:"department"`
+	ReceiverIDs []int64 `json:"receiver_ids"`
+}
+
 type StaffCountResult struct {
 	DepartmentID int64 `gorm:"column:department_id"`
 	StaffCount   int64 `gorm:"column:staff_count"`
@@ -54,6 +63,13 @@ type RoomCountResult struct {
 }
 
 type OrderRoomData struct {
-	ID       int64     `json:"id"`
+	ID        int64     `json:"id"`
 	ExpiredAt time.Time `json:"expired_at"`
+}
+
+type SSEEventData struct {
+	Event      string  `json:"event"`
+	Type       string  `json:"type"`
+	Department *string `json:"department,omitempty"`
+	Data       any     `json:"data,omitempty"`
 }

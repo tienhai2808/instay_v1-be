@@ -242,3 +242,108 @@ func (m *AuthMiddleware) HasGuestToken() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func (m *AuthMiddleware) IsClient() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		accessToken, err := c.Cookie(m.accessName)
+		if err == nil {
+			userID, userRole, issuedAt, err := m.jwtProvider.ParseToken(accessToken)
+			if err == nil {
+				ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+				defer cancel()
+
+				revocationKey := fmt.Sprintf("user-revoked-before:%d", userID)
+				revokedTimestampStr, err := m.cacheProvider.GetString(c.Request.Context(), revocationKey)
+				if err != nil {
+					m.logger.Error("get revocation key from cache failed", zap.String("key", revocationKey), zap.Error(err))
+					c.AbortWithStatusJSON(http.StatusInternalServerError, types.APIResponse{
+						Message: "internal server error",
+					})
+					return
+				}
+				if revokedTimestampStr != "" {
+					revokedTimestamp, _ := strconv.ParseInt(revokedTimestampStr, 10, 64)
+					if issuedAt < revokedTimestamp {
+						c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
+							Message: common.ErrInvalidToken.Error(),
+						})
+						return
+					}
+				}
+
+				user, err := m.userRepo.FindByIDWithDepartment(ctx, userID)
+				if err != nil {
+					m.logger.Error("find user by id failed", zap.Int64("id", userID), zap.Error(err))
+					c.AbortWithStatusJSON(http.StatusInternalServerError, types.APIResponse{
+						Message: "internal server error",
+					})
+					return
+				}
+				if user == nil {
+					c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
+						Message: common.ErrUserNotFound.Error(),
+					})
+					return
+				}
+
+				if !user.IsActive {
+					c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
+						Message: common.ErrInvalidUser.Error(),
+					})
+					return
+				}
+
+				if user.Role != userRole {
+					c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
+						Message: common.ErrInvalidUser.Error(),
+					})
+					return
+				}
+				c.Set("client_id", user.ID)
+				c.Set("client_type", "staff")
+				c.Set("department", user.Department)
+				c.Next()
+				return
+			}
+		}
+
+		guestToken, err := c.Cookie(m.guestName)
+		if err == nil {
+			orderRoomID, err := m.jwtProvider.ParseGuestToken(guestToken)
+			if err == nil {
+				c.Set("client_id", orderRoomID)
+				c.Set("client_type", "guest")
+				c.Set("department", nil)
+				c.Next()
+				return
+			}
+		}
+
+		c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
+			Message: common.ErrForbidden.Error(),
+		})
+	}
+}
+
+func (m *AuthMiddleware) HasDepartment(department string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userAny, exists := c.Get("user")
+		if !exists {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, types.APIResponse{
+				Message: common.ErrUnAuth.Error(),
+			})
+			return
+		}
+
+		userData := userAny.(*types.UserData)
+
+		if userData.Department.Name == department || userData.Role == "admin" {
+			c.Next()
+			return
+		}
+
+		c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
+			Message: common.ErrForbidden.Error(),
+		})
+	}
+}

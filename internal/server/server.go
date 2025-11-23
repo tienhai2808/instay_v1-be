@@ -65,7 +65,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 	ctn := container.NewContainer(cfg, db.Gorm, rdb, s3, sf, logger, mq.Conn, mq.Chan)
 
-	mqWorker := worker.NewMQWorker(cfg, ctn.MQProvider, ctn.SMTPProvider, s3.Client, logger)
+	mqWorker := worker.NewMQWorker(cfg, ctn.MQProvider, ctn.SMTPProvider, s3.Client, logger, ctn.SSEHub)
 	mqWorker.Start()
 
 	listenWorker := worker.NewListenWorker(cfg, ctn.BookingRepo, ctn.SfGen, logger)
@@ -98,6 +98,8 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	router.RequestRouter(api, ctn.RequestCtn.Hdl, ctn.AuthMid)
 	router.RoomRouter(api, ctn.RoomCtn.Hdl, ctn.AuthMid)
 	router.BookingRouter(api, ctn.BookingCtn.Hdl, ctn.AuthMid)
+	router.OrderRouter(api, ctn.OrderCtn.Hdl, ctn.AuthMid)
+	router.SSERouter(api, ctn.SSECtn.Hdl, ctn.AuthMid)
 
 	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
@@ -106,7 +108,10 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	http := &http.Server{
 		Addr:           addr,
 		Handler:        r,
-		MaxHeaderBytes: 5 * 1024 * 1024,
+		MaxHeaderBytes: cfg.Server.MaxHeaderBytes * 1024 * 1024,
+		IdleTimeout:    cfg.Server.IdleTimeout * time.Second,
+		ReadTimeout:    cfg.Server.ReadTimeout * time.Second,
+		WriteTimeout:   cfg.Server.ReadTimeout * time.Second,
 	}
 
 	return &Server{
@@ -128,7 +133,7 @@ func (s *Server) Shutdown(ctx context.Context) {
 	if s.listenWorker != nil {
 		s.listenWorker.Stop()
 	}
-	
+
 	if s.db != nil {
 		s.db.Close()
 	}

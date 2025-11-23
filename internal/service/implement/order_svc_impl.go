@@ -10,6 +10,7 @@ import (
 	"github.com/InstaySystem/is-be/internal/model"
 	"github.com/InstaySystem/is-be/internal/provider/cache"
 	"github.com/InstaySystem/is-be/internal/provider/jwt"
+	"github.com/InstaySystem/is-be/internal/provider/mq"
 	"github.com/InstaySystem/is-be/internal/repository"
 	"github.com/InstaySystem/is-be/internal/service"
 	"github.com/InstaySystem/is-be/internal/types"
@@ -26,6 +27,7 @@ type orderSvcImpl struct {
 	logger           *zap.Logger
 	cacheProvider    cache.CacheProvider
 	jwtProvider      jwt.JWTProvider
+	mqProvider       mq.MessageQueueProvider
 }
 
 func NewOrderService(
@@ -37,6 +39,7 @@ func NewOrderService(
 	logger *zap.Logger,
 	cacheProvider cache.CacheProvider,
 	jwtProvider jwt.JWTProvider,
+	mqProvider mq.MessageQueueProvider,
 ) service.OrderService {
 	return &orderSvcImpl{
 		orderRepo,
@@ -47,6 +50,7 @@ func NewOrderService(
 		logger,
 		cacheProvider,
 		jwtProvider,
+		mqProvider,
 	}
 }
 
@@ -136,7 +140,16 @@ func (s *orderSvcImpl) CreateOrderService(ctx context.Context, orderRoomID int64
 		return 0, err
 	}
 
-	service, err := s.serviceRepo.FindServiceByIDWithServiceType(ctx, req.ServiceID)
+	orderRoom, err := s.orderRepo.FindOrderRoomByIDWithRoom(ctx, orderRoomID)
+	if err != nil {
+		s.logger.Error("find order room by id failed", zap.Int64("id", orderRoomID), zap.Error(err))
+		return 0, err
+	}
+	if orderRoom == nil {
+		return 0, common.ErrOrderRoomNotFound
+	}
+
+	service, err := s.serviceRepo.FindServiceByIDWithServiceTypeWithDepartmentWithStaffs(ctx, req.ServiceID)
 	if err != nil {
 		s.logger.Error("find service by id failed", zap.Int64("id", req.ServiceID), zap.Error(err))
 		return 0, err
@@ -156,9 +169,6 @@ func (s *orderSvcImpl) CreateOrderService(ctx context.Context, orderRoomID int64
 	}
 
 	if err = s.orderRepo.CreateOrderService(ctx, orderService); err != nil {
-		if common.IsForeignKeyViolation(err) {
-			return 0, common.ErrOrderRoomNotFound
-		}
 		s.logger.Error("create order service failed", zap.Error(err))
 		return 0, err
 	}
@@ -169,12 +179,12 @@ func (s *orderSvcImpl) CreateOrderService(ctx context.Context, orderRoomID int64
 		return 0, err
 	}
 
-	content := "Có đơn đặt dịch vụ"
+	content := fmt.Sprintf("Phòng %s yêu cầu %d %s", orderRoom.Room.Name, req.Quantity, service.Name)
 	notification := &model.Notification{
 		ID:           notificationID,
 		DepartmentID: service.ServiceType.DepartmentID,
 		Type:         "service",
-		Receiver:     "department",
+		Receiver:     "staff",
 		Content:      content,
 		ContentID:    service.ID,
 	}
@@ -183,6 +193,27 @@ func (s *orderSvcImpl) CreateOrderService(ctx context.Context, orderRoomID int64
 		s.logger.Error("create notification failed", zap.Error(err))
 		return 0, err
 	}
+
+	staffIDs := make([]int64, 0, len(service.ServiceType.Department.Staffs))
+	for _, staff := range service.ServiceType.Department.Staffs {
+		staffIDs = append(staffIDs, staff.ID)
+	}
+
+	serviceNotificationMsg := types.ServiceNotificationMessage{
+		Content:     notification.Content,
+		Type:        notification.Type,
+		ContentID:   notification.ContentID,
+		Receiver:    notification.Receiver,
+		Department:  &service.ServiceType.Department.Name,
+		ReceiverIDs: staffIDs,
+	}
+
+	go func(msg types.ServiceNotificationMessage) {
+		body, _ := json.Marshal(msg)
+		if s.mqProvider.PublishMessage(common.ExchangeNotification, common.RoutingKeyServiceNotification, body); err != nil {
+			s.logger.Error("publish service notification message failed", zap.Error(err))
+		}
+	}(serviceNotificationMsg)
 
 	return orderServiceID, nil
 }

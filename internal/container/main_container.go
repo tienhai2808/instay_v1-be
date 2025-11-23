@@ -2,6 +2,7 @@ package container
 
 import (
 	"github.com/InstaySystem/is-be/internal/config"
+	"github.com/InstaySystem/is-be/internal/hub"
 	"github.com/InstaySystem/is-be/internal/initialization"
 	"github.com/InstaySystem/is-be/internal/middleware"
 	"github.com/InstaySystem/is-be/internal/provider/cache"
@@ -29,12 +30,14 @@ type Container struct {
 	RoomCtn       *RoomContainer
 	BookingCtn    *BookingContainer
 	OrderCtn      *OrderContainer
+	SSECtn        *SSEContainer
 	AuthMid       *middleware.AuthMiddleware
 	ReqMid        *middleware.RequestMiddleware
 	SMTPProvider  smtp.SMTPProvider
 	MQProvider    mq.MessageQueueProvider
 	SfGen         snowflake.Generator
 	BookingRepo   repository.BookingRepository
+	SSEHub        *hub.SSEHub
 }
 
 func NewContainer(
@@ -53,6 +56,7 @@ func NewContainer(
 	smtpProvider := smtp.NewSMTPProvider(cfg)
 	mqProvider := mq.NewMessageQueueProvider(mqConn, mqChan, logger)
 	cacheProvider := cache.NewCacheProvider(rdb)
+	sseHub := hub.NewSSEHub()
 
 	userRepo := repoImpl.NewUserRepository(db)
 	serviceRepo := repoImpl.NewServiceRepository(db)
@@ -71,7 +75,8 @@ func NewContainer(
 	requestCtn := NewRequestContainer(requestRepo, sfGen, logger)
 	roomCtn := NewRoomContainer(roomRepo, sfGen, logger)
 	bookingCtn := NewBookingContainer(db, logger)
-	orderCtn := NewOrderContainer(orderRepo, bookingRepo, serviceRepo, notificationRepo, sfGen, logger, cacheProvider, jwtProvider, cfg.JWT.GuestName)
+	orderCtn := NewOrderContainer(orderRepo, bookingRepo, serviceRepo, notificationRepo, sfGen, logger, cacheProvider, jwtProvider, mqProvider, cfg.JWT.GuestName)
+	sseCtn := NewSSEContainer(sseHub)
 
 	authMid := middleware.NewAuthMiddleware(cfg.JWT.AccessName, cfg.JWT.RefreshName, cfg.JWT.GuestName, userRepo, jwtProvider, logger, cacheProvider)
 	reqMid := middleware.NewRequestMiddleware(logger)
@@ -86,11 +91,13 @@ func NewContainer(
 		roomCtn,
 		bookingCtn,
 		orderCtn,
+		sseCtn,
 		authMid,
 		reqMid,
 		smtpProvider,
 		mqProvider,
 		sfGen,
 		bookingRepo,
+		sseHub,
 	}
 }

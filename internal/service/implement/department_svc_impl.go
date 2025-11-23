@@ -40,7 +40,7 @@ func (s *departmentSvcImpl) CreateDepartment(ctx context.Context, userID int64, 
 
 	department := &model.Department{
 		ID:          id,
-		Name:        req.Name,
+		Name:        common.GenerateSlug(req.Name),
 		DisplayName: req.DisplayName,
 		Description: req.Description,
 		CreatedByID: userID,

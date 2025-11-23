@@ -7,7 +7,7 @@ import (
 )
 
 func OrderRouter(rg *gin.RouterGroup, hdl *handler.OrderHandler, authMid *middleware.AuthMiddleware) {
-	admin := rg.Group("/admin", authMid.IsAuthentication(), authMid.HasAnyRole([]string{"admin"}))
+	admin := rg.Group("/admin", authMid.IsAuthentication(), authMid.HasDepartment("reception"))
 	{
 		admin.POST("/orders/rooms", hdl.CreateOrderRoom)
 	}

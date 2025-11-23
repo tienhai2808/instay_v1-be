@@ -7,6 +7,7 @@ import (
 
 	"github.com/InstaySystem/is-be/internal/common"
 	"github.com/InstaySystem/is-be/internal/config"
+	"github.com/InstaySystem/is-be/internal/hub"
 	"github.com/InstaySystem/is-be/internal/provider/mq"
 	"github.com/InstaySystem/is-be/internal/provider/smtp"
 	"github.com/InstaySystem/is-be/internal/types"
@@ -21,6 +22,7 @@ type MQWorker struct {
 	smtp   smtp.SMTPProvider
 	s3     *awsS3.Client
 	logger *zap.Logger
+	sseHub *hub.SSEHub
 }
 
 func NewMQWorker(
@@ -29,6 +31,7 @@ func NewMQWorker(
 	smtp smtp.SMTPProvider,
 	s3 *awsS3.Client,
 	logger *zap.Logger,
+	sseHub *hub.SSEHub,
 ) *MQWorker {
 	return &MQWorker{
 		cfg,
@@ -36,12 +39,14 @@ func NewMQWorker(
 		smtp,
 		s3,
 		logger,
+		sseHub,
 	}
 }
 
 func (w *MQWorker) Start() {
 	go w.startSendAuthEmail()
 	go w.startDeleteFile()
+	go w.startSendServiceNotification()
 }
 
 func (w *MQWorker) startSendAuthEmail() {
@@ -85,5 +90,36 @@ func (w *MQWorker) startDeleteFile() {
 		return nil
 	}); err != nil {
 		w.logger.Error("start consumer delete file failed", zap.Error(err))
+	}
+}
+
+func (w *MQWorker) startSendServiceNotification() {
+	if err := w.mq.ConsumeMessage(common.QueueNameServiceNotification, common.ExchangeNotification, common.RoutingKeyServiceNotification, func(body []byte) error {
+		var serviceNotificationMsg types.ServiceNotificationMessage
+		if err := json.Unmarshal(body, &serviceNotificationMsg); err != nil {
+			return err
+		}
+
+		data := map[string]any{
+			"content":    serviceNotificationMsg.Content,
+			"content_id": serviceNotificationMsg.ContentID,
+			"type":       serviceNotificationMsg.Type,
+		}
+
+		event := types.SSEEventData{
+			Event:      "order_service",
+			Type:       serviceNotificationMsg.Receiver,
+			Department: serviceNotificationMsg.Department,
+			Data:       data,
+		}
+
+		for _, clientID := range serviceNotificationMsg.ReceiverIDs {
+			w.sseHub.SendToClient(clientID, event)
+		}
+
+		w.logger.Info("Service notification sent successfully")
+		return nil
+	}); err != nil {
+		w.logger.Error("start consumer send service notification failed", zap.Error(err))
 	}
 }
