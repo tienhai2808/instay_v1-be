@@ -150,6 +150,7 @@ func (h *OrderHandler) CreateOrderService(c *gin.Context) {
 		default:
 			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
 		}
+		return
 	}
 
 	common.ToAPIResponse(c, http.StatusOK, "Order service created successful", gin.H{

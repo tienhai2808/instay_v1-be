@@ -199,6 +199,7 @@ func (s *orderSvcImpl) CreateOrderService(ctx context.Context, orderRoomID int64
 	notification := &model.Notification{
 		ID:           notificationID,
 		DepartmentID: service.ServiceType.DepartmentID,
+		OrderRoomID:  orderRoomID,
 		Type:         "service",
 		Receiver:     "staff",
 		Content:      content,

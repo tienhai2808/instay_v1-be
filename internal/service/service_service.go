@@ -28,7 +28,7 @@ type ServiceService interface {
 
 	DeleteService(ctx context.Context, serviceID int64) error
 
-	GetServiceTypeBySlug(ctx context.Context, serviceTypeSlug string) (*model.ServiceType, error)
+	GetServiceTypeBySlugWithServices(ctx context.Context, serviceTypeSlug string) (*model.ServiceType, error)
 
 	GetServiceBySlug(ctx context.Context, serviceSlug string) (*model.Service, error)
 }

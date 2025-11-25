@@ -173,6 +173,7 @@ func (s *serviceSvcImpl) CreateService(ctx context.Context, userID int64, req ty
 		Name:          req.Name,
 		Slug:          common.GenerateSlug(req.Name),
 		Price:         req.Price,
+		IsActive:      req.IsActive,
 		Description:   req.Description,
 		CreatedByID:   userID,
 		UpdatedByID:   userID,
@@ -446,8 +447,8 @@ func (s *serviceSvcImpl) DeleteService(ctx context.Context, serviceID int64) err
 	return nil
 }
 
-func (s *serviceSvcImpl) GetServiceTypeBySlug(ctx context.Context, serviceTypeSlug string) (*model.ServiceType, error) {
-	serviceType, err := s.serviceRepo.FindServiceTypeBySlugWithServiceDetails(ctx, serviceTypeSlug)
+func (s *serviceSvcImpl) GetServiceTypeBySlugWithServices(ctx context.Context, serviceTypeSlug string) (*model.ServiceType, error) {
+	serviceType, err := s.serviceRepo.FindServiceTypeBySlugWithActiveServiceDetails(ctx, serviceTypeSlug)
 	if err != nil {
 		s.logger.Error("find service type by slug failed", zap.String("slug", serviceTypeSlug), zap.Error(err))
 		return nil, err

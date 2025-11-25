@@ -31,7 +31,7 @@ type OrderService struct {
 	GuestNote    string    `gorm:"type:text" json:"guest_note"`
 	StaffNote    string    `gorm:"tyep:text" json:"staff_note"`
 	CancelReason string    `gorm:"type:text" json:"cancel_reason"`
-	UpdatedByID  int64     `gorm:"type:bigint" json:"updated_by_id"`
+	UpdatedByID  *int64    `gorm:"type:bigint" json:"updated_by_id"`
 
 	Service   *Service   `gorm:"foreignKey:ServiceID;references:ID;constraint:fk_order_services_service,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"service"`
 	OrderRoom *OrderRoom `gorm:"foreignKey:OrderRoomID;references:ID;constraint:fk_order_services_order_room,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"order_room"`

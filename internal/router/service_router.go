@@ -30,7 +30,7 @@ func ServiceRouter(rg *gin.RouterGroup, hdl *handler.ServiceHandler, authMid *mi
 
 	rg.GET("/service-types", hdl.GetServiceTypesForGuest)
 
-	rg.GET("/service-types/:slug/services", authMid.HasGuestToken(), hdl.GetServiceTypeBySlug)
+	rg.GET("/service-types/:slug/services", authMid.HasGuestToken(), hdl.GetServiceTypeBySlugWithServices)
 
 	rg.GET("/services/:slug", authMid.HasGuestToken(), hdl.GetServiceBySlug)
 }

@@ -152,9 +152,9 @@ func (r *serviceRepoImpl) CreateService(ctx context.Context, service *model.Serv
 	return r.db.WithContext(ctx).Create(service).Error
 }
 
-func (r *serviceRepoImpl) FindServiceTypeBySlugWithServiceDetails(ctx context.Context, serviceTypeSlug string) (*model.ServiceType, error) {
+func (r *serviceRepoImpl) FindServiceTypeBySlugWithActiveServiceDetails(ctx context.Context, serviceTypeSlug string) (*model.ServiceType, error) {
 	var serviceType model.ServiceType
-	if err := r.db.WithContext(ctx).Preload("Services.ServiceImages", "is_thumbnail = true").Where("slug = ?", serviceTypeSlug).First(&serviceType).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Services", "is_active = true").Preload("Services.ServiceImages", "is_thumbnail = true").Where("slug = ?", serviceTypeSlug).First(&serviceType).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}

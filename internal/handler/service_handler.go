@@ -458,13 +458,13 @@ func (h *ServiceHandler) DeleteService(c *gin.Context) {
 	common.ToAPIResponse(c, http.StatusOK, "Service deleted successfully", nil)
 }
 
-func (h *ServiceHandler) GetServiceTypeBySlug(c *gin.Context) {
+func (h *ServiceHandler) GetServiceTypeBySlugWithServices(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
 	serviceTypeSlug := c.Param("slug")
 
-	serviceType, err := h.serviceSvc.GetServiceTypeBySlug(ctx, serviceTypeSlug)
+	serviceType, err := h.serviceSvc.GetServiceTypeBySlugWithServices(ctx, serviceTypeSlug)
 	if err != nil {
 		switch err {
 		case common.ErrServiceTypeNotFound:
@@ -498,6 +498,6 @@ func (h *ServiceHandler) GetServiceBySlug(c *gin.Context) {
 	}
 
 	common.ToAPIResponse(c, http.StatusOK, "Get service information successfully", gin.H{
-		"service_type": common.ToSimpleServiceResponse(service),
+		"service": common.ToSimpleServiceResponse(service),
 	})
 }
