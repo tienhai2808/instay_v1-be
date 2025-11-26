@@ -21,6 +21,7 @@ type OrderRoom struct {
 
 type OrderService struct {
 	ID           int64     `gorm:"type:bigint;primaryKey" json:"id"`
+	Code         string    `gorm:"type:char(10);not null;uniqueIndex:order_services_code_key" json:"code"`
 	OrderRoomID  int64     `gorm:"type:bigint;not null" json:"order_room_id"`
 	ServiceID    int64     `gorm:"type:bigint;not null" json:"service_id"`
 	Quantity     uint32    `gorm:"type:integer;not null" json:"quantity"`
@@ -28,9 +29,9 @@ type OrderService struct {
 	Status       string    `gorm:"type:varchar(20);check:status IN ('pending', 'accepted', 'rejected', 'canceled')" json:"status"`
 	CreatedAt    time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt    time.Time `gorm:"autoUpdateTime" json:"updated_at"`
-	GuestNote    string    `gorm:"type:text" json:"guest_note"`
-	StaffNote    string    `gorm:"tyep:text" json:"staff_note"`
-	CancelReason string    `gorm:"type:text" json:"cancel_reason"`
+	GuestNote    *string   `gorm:"type:text" json:"guest_note"`
+	StaffNote    *string   `gorm:"type:text" json:"staff_note"`
+	CancelReason *string   `gorm:"type:text" json:"cancel_reason"`
 	UpdatedByID  *int64    `gorm:"type:bigint" json:"updated_by_id"`
 
 	Service   *Service   `gorm:"foreignKey:ServiceID;references:ID;constraint:fk_order_services_service,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"service"`

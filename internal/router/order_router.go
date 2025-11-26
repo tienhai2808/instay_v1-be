@@ -20,6 +20,8 @@ func OrderRouter(rg *gin.RouterGroup, hdl *handler.OrderHandler, authMid *middle
 	{
 		guest.POST("/services", hdl.CreateOrderService)
 
+		guest.GET("/services/:code", hdl.GetOrderServiceByCode)
+
 		guest.DELETE("/services/:id", hdl.CancelOrderService)
 	}
 }

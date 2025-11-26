@@ -2,6 +2,7 @@ package common
 
 import (
 	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -92,4 +93,10 @@ func GenerateBase58ID(size int) string {
 	b := make([]byte, size)
 	rand.Read(b)
 	return base58.Encode(b)
+}
+
+func GenerateCode(size int) string {
+	b := make([]byte, size)
+	rand.Read(b)
+	return strings.ToUpper(hex.EncodeToString(b))
 }

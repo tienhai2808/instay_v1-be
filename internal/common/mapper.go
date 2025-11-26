@@ -525,3 +525,22 @@ func ToFloorsResponse(floors []*model.Floor) []*types.FloorResponse {
 
 	return floorsRes
 }
+
+func ToSimpleOrderServiceResponse(orderService *model.OrderService) *types.SimpleOrderServiceResponse {
+	if orderService == nil {
+		return nil
+	}
+
+	return &types.SimpleOrderServiceResponse{
+		ID:           orderService.ID,
+		Code:         orderService.Code,
+		Service:      ToBaseServiceResponse(orderService.Service),
+		Quantity:     orderService.Quantity,
+		TotalPrice:   orderService.TotalPrice,
+		Status:       orderService.Status,
+		GuestNote:    orderService.GuestNote,
+		StaffNote:    orderService.StaffNote,
+		CancelReason: orderService.CancelReason,
+		CreatedAt:    orderService.CreatedAt,
+	}
+}

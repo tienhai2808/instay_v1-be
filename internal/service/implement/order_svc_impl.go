@@ -181,12 +181,13 @@ func (s *orderSvcImpl) CreateOrderService(ctx context.Context, orderRoomID int64
 
 	orderService := &model.OrderService{
 		ID:          orderServiceID,
+		Code:        common.GenerateCode(10),
 		OrderRoomID: orderRoomID,
 		ServiceID:   req.ServiceID,
 		Quantity:    req.Quantity,
 		TotalPrice:  float64(req.Quantity) * service.Price,
 		Status:      "pending",
-		GuestNote:   *req.GuestNote,
+		GuestNote:   req.GuestNote,
 	}
 
 	notificationID, err := s.sfGen.NextID()
@@ -208,6 +209,9 @@ func (s *orderSvcImpl) CreateOrderService(ctx context.Context, orderRoomID int64
 
 	if err = s.db.Transaction(func(tx *gorm.DB) error {
 		if err = s.orderRepo.CreateOrderServiceTx(ctx, tx, orderService); err != nil {
+			if ok, _ := common.IsUniqueViolation(err); ok {
+				return common.ErrOrderServiceCodeAlreadyExists
+			}
 			s.logger.Error("create order service failed", zap.Error(err))
 			return err
 		}
@@ -243,6 +247,23 @@ func (s *orderSvcImpl) CreateOrderService(ctx context.Context, orderRoomID int64
 	}(serviceNotificationMsg)
 
 	return orderServiceID, nil
+}
+
+func (s *orderSvcImpl) GetOrderServiceByCode(ctx context.Context, orderRoomID int64, orderServiceCode string) (*model.OrderService, error) {
+	orderService, err := s.orderRepo.FindOrderServiceByCodeWithServiceDetails(ctx, orderServiceCode)
+	if err != nil {
+		s.logger.Error("find order room by id failed", zap.String("code", orderServiceCode), zap.Error(err))
+		return nil, err
+	}
+	if orderService == nil {
+		return nil, common.ErrOrderServiceNotFound
+	}
+
+	if orderService.OrderRoomID != orderRoomID {
+		return nil, common.ErrForbidden
+	}
+
+	return orderService, nil
 }
 
 func (s *orderSvcImpl) CancelOrderService(ctx context.Context, orderRoomID, orderServiceID int64) error {

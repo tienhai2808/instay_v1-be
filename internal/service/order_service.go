@@ -17,5 +17,7 @@ type OrderService interface {
 
 	CreateOrderService(ctx context.Context, orderRoomID int64, req types.CreateOrderServiceRequest) (int64, error)
 
+	GetOrderServiceByCode(ctx context.Context, orderRoomID int64, orderServiceCode string) (*model.OrderService, error)
+
 	CancelOrderService(ctx context.Context, orderRoomID, orderServiceID int64) error
 }

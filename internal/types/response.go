@@ -112,10 +112,10 @@ type SimpleServiceImageResponse struct {
 }
 
 type ServiceImageResponse struct {
-	ID          int64     `json:"id"`
-	Key         string    `json:"key"`
-	IsThumbnail bool      `json:"is_thumbnail"`
-	SortOrder   uint32    `json:"sort_order"`
+	ID          int64  `json:"id"`
+	Key         string `json:"key"`
+	IsThumbnail bool   `json:"is_thumbnail"`
+	SortOrder   uint32 `json:"sort_order"`
 }
 
 type BaseServiceResponse struct {
@@ -228,4 +228,17 @@ type RoomResponse struct {
 	UpdatedBy *BasicUserResponse      `json:"updated_by"`
 	RoomType  *SimpleRoomTypeResponse `json:"room_type"`
 	Floor     *FloorResponse          `json:"floor"`
+}
+
+type SimpleOrderServiceResponse struct {
+	ID           int64                `json:"id"`
+	Code         string               `json:"code"`
+	Service      *BaseServiceResponse `json:"service"`
+	Quantity     uint32               `json:"quantity"`
+	TotalPrice   float64              `json:"total_price"`
+	Status       string               `json:"status"`
+	CreatedAt    time.Time            `json:"created_at"`
+	GuestNote    *string              `json:"guest_note"`
+	StaffNote    *string              `json:"staff_note"`
+	CancelReason *string              `json:"cancel_reason"`
 }
