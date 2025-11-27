@@ -22,9 +22,18 @@ func (r *requestRepoImpl) CreateRequestType(ctx context.Context, requestType *mo
 	return r.db.WithContext(ctx).Create(requestType).Error
 }
 
-func (r *requestRepoImpl) FindAllRequestTypeWithDetails(ctx context.Context) ([]*model.RequestType, error) {
+func (r *requestRepoImpl) FindAllRequestTypesWithDetails(ctx context.Context) ([]*model.RequestType, error) {
 	var requestTypes []*model.RequestType
 	if err := r.db.WithContext(ctx).Preload("Department").Preload("CreatedBy").Preload("UpdatedBy").Order("name ASC").Find(&requestTypes).Error; err != nil {
+		return nil, err
+	}
+
+	return requestTypes, nil
+}
+
+func (r *requestRepoImpl) FindAllRequestTypes(ctx context.Context) ([]*model.RequestType, error) {
+	var requestTypes []*model.RequestType
+	if err := r.db.WithContext(ctx).Order("name ASC").Find(&requestTypes).Error; err != nil {
 		return nil, err
 	}
 
@@ -83,4 +92,16 @@ func (r *requestRepoImpl) DeleteRequestType(ctx context.Context, requestTypeID i
 
 func (r *requestRepoImpl) CreateRequest(ctx context.Context, request *model.Request) error {
 	return r.db.WithContext(ctx).Create(request).Error
+}
+
+func (r *requestRepoImpl) FindRequestByCodeWithRequestType(ctx context.Context, requestCode string) (*model.Request, error) {
+	var request model.Request
+	if err := r.db.WithContext(ctx).Preload("RequestType").Where("code = ?", requestCode).First(&request).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &request, nil
 }

@@ -73,6 +73,21 @@ func (h *RequestHandler) GetRequestTypesForAdmin(c *gin.Context) {
 	})
 }
 
+func (h *RequestHandler) GetRequestTypesForGuest(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	requestTypes, err := h.requestSvc.GetRequestTypesForGuest(ctx)
+	if err != nil {
+		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		return
+	}
+
+	common.ToAPIResponse(c, http.StatusOK, "Get request types successfully", gin.H{
+		"request_types": common.ToSimpleRequestTypesResponse(requestTypes),
+	})
+}
+
 func (h *RequestHandler) UpdateRequestType(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
@@ -160,7 +175,7 @@ func (h *RequestHandler) CreateRequest(c *gin.Context) {
 		return
 	}
 
-	id, err := h.requestSvc.CreateRequest(ctx, orderRoomID, req)
+	code, err := h.requestSvc.CreateRequest(ctx, orderRoomID, req)
 	if err != nil {
 		switch err {
 		case common.ErrRequestTypeNotFound:
@@ -174,6 +189,34 @@ func (h *RequestHandler) CreateRequest(c *gin.Context) {
 	}
 
 	common.ToAPIResponse(c, http.StatusCreated, "Request created successful", gin.H{
-		"id": id,
+		"code": code,
+	})
+}
+
+func (h *RequestHandler) GetRequestByCode(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	requestCode := c.Param("code")
+
+	orderRoomID := c.GetInt64("order_room_id")
+	if orderRoomID == 0 {
+		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		return
+	}
+
+	request, err := h.requestSvc.GetRequestByCode(ctx, orderRoomID, requestCode)
+	if err != nil {
+		switch err {
+		case common.ErrRequestNotFound:
+			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
+		default:
+			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		}
+		return
+	}
+
+	common.ToAPIResponse(c, http.StatusOK, "Get request information successful", gin.H{
+		"request": common.ToSimpleRequestResponse(request),
 	})
 }

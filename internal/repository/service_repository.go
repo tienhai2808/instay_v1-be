@@ -31,7 +31,7 @@ type ServiceRepository interface {
 
 	UpdateServiceImageTx(ctx context.Context, tx *gorm.DB, serviceImageID int64, updateData map[string]any) error
 
-	CreateAllServiceImageTx(ctx context.Context, tx *gorm.DB, serviceImages []*model.ServiceImage) error
+	CreateServiceImagesTx(ctx context.Context, tx *gorm.DB, serviceImages []*model.ServiceImage) error
 
 	UpdateServiceTx(ctx context.Context, tx *gorm.DB, serviceID int64, updateData map[string]any) error
 

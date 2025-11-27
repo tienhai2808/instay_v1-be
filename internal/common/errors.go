@@ -47,6 +47,8 @@ var (
 
 	ErrRequestTypeNotFound = errors.New("request type not found")
 
+	ErrRequestNotFound = errors.New("request not found")
+
 	ErrServiceAlreadyExists = errors.New("service already exists")
 
 	ErrServiceNotFound = errors.New("service not found")

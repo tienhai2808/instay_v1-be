@@ -140,7 +140,7 @@ func (h *OrderHandler) CreateOrderService(c *gin.Context) {
 		return
 	}
 
-	id, err := h.orderSvc.CreateOrderService(ctx, orderRoomID, req)
+	code, err := h.orderSvc.CreateOrderService(ctx, orderRoomID, req)
 	if err != nil {
 		switch err {
 		case common.ErrServiceNotFound:
@@ -154,7 +154,7 @@ func (h *OrderHandler) CreateOrderService(c *gin.Context) {
 	}
 
 	common.ToAPIResponse(c, http.StatusCreated, "Order service created successful", gin.H{
-		"id": id,
+		"code": code,
 	})
 }
 

@@ -390,7 +390,7 @@ func (s *serviceSvcImpl) UpdateService(ctx context.Context, serviceID, userID in
 				images = append(images, serviceImage)
 			}
 
-			if err = s.serviceRepo.CreateAllServiceImageTx(ctx, tx, images); err != nil {
+			if err = s.serviceRepo.CreateServiceImagesTx(ctx, tx, images); err != nil {
 				s.logger.Error("create service images failed", zap.Error(err))
 				return err
 			}

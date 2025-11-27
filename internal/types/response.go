@@ -292,3 +292,18 @@ type SimpleNotificationResponse struct {
 	CreatedAt time.Time                  `json:"created_at"`
 	StaffRead *NotificationStaffResponse `json:"staff_read"`
 }
+
+type SimpleRequestTypeResponse struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
+	Slug string `json:"slug"`
+}
+
+type SimpleRequestResponse struct {
+	ID          int64                      `json:"id"`
+	Code        string                     `json:"code"`
+	RequestType *SimpleRequestTypeResponse `json:"request_type"`
+	Content     string                     `json:"content"`
+	Status      string                     `json:"status"`
+	CreatedAt   time.Time                  `json:"created_at"`
+}

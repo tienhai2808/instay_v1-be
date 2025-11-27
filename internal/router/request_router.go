@@ -18,8 +18,12 @@ func RequestRouter(rg *gin.RouterGroup, hdl *handler.RequestHandler, authMid *mi
 		admin.DELETE("/request-types/:id", hdl.DeleteRequestType)
 	}
 
+	rg.GET("/request-types", hdl.GetRequestTypesForGuest)
+
 	guest := rg.Group("/requests", authMid.HasGuestToken())
 	{
 		guest.POST("", hdl.CreateRequest)
+
+		guest.GET("/:code", hdl.GetRequestByCode)
 	}
 }

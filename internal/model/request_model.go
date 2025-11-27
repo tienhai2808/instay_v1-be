@@ -27,7 +27,9 @@ type Request struct {
 	UpdatedAt     time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 	UpdatedByID   *int64    `gorm:"type:bigint" json:"updated_by_id"`
 	RequestTypeID int64     `gorm:"type:bigint;not null" json:"request_type_id"`
+	OrderRoomID   int64     `gorm:"type:bigint;not null" json:"order_room_id"`
 
+	OrderRoom   *OrderRoom   `gorm:"foreignKey:OrderRoomID;references:ID;constraint:fk_requests_order_room,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"order_room"`
 	RequestType *RequestType `gorm:"foreignKey:RequestTypeID;references:ID;constraint:fk_requests_request_type,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"request_type"`
 	UpdatedBy   *User        `gorm:"foreignKey:UpdatedByID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:RESTRICT" json:"updated_by"`
 }

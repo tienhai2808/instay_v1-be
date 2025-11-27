@@ -15,7 +15,7 @@ type OrderService interface {
 
 	VerifyOrderRoom(ctx context.Context, secretCode string) (string, time.Duration, error)
 
-	CreateOrderService(ctx context.Context, orderRoomID int64, req types.CreateOrderServiceRequest) (int64, error)
+	CreateOrderService(ctx context.Context, orderRoomID int64, req types.CreateOrderServiceRequest) (string, error)
 
 	GetOrderServiceByCode(ctx context.Context, orderRoomID int64, orderServiceCode string) (*model.OrderService, error)
 

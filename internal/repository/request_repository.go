@@ -9,7 +9,9 @@ import (
 type RequestRepository interface {
 	CreateRequestType(ctx context.Context, requestType *model.RequestType) error
 
-	FindAllRequestTypeWithDetails(ctx context.Context) ([]*model.RequestType, error)
+	FindAllRequestTypesWithDetails(ctx context.Context) ([]*model.RequestType, error)
+
+	FindAllRequestTypes(ctx context.Context) ([]*model.RequestType, error)
 
 	FindRequestTypeByID(ctx context.Context, requestTypeID int64) (*model.RequestType, error)
 
@@ -20,4 +22,6 @@ type RequestRepository interface {
 	DeleteRequestType(ctx context.Context, requestTypeID int64) error
 
 	CreateRequest(ctx context.Context, request *model.Request) error
+
+	FindRequestByCodeWithRequestType(ctx context.Context, requestCode string) (*model.Request, error)
 }

@@ -365,6 +365,19 @@ func ToRequestTypesResponse(requestTypes []*model.RequestType) []*types.RequestT
 	return requestTypesRes
 }
 
+func ToSimpleRequestTypesResponse(requestTypes []*model.RequestType) []*types.SimpleRequestTypeResponse {
+	if len(requestTypes) == 0 {
+		return make([]*types.SimpleRequestTypeResponse, 0)
+	}
+
+	requestTypesRes := make([]*types.SimpleRequestTypeResponse, 0, len(requestTypes))
+	for _, requestType := range requestTypes {
+		requestTypesRes = append(requestTypesRes, ToSimpleRequestTypeResponse(requestType))
+	}
+
+	return requestTypesRes
+}
+
 func ToRoomTypeResponse(roomType *model.RoomType) *types.RoomTypeResponse {
 	if roomType == nil {
 		return nil
@@ -613,13 +626,13 @@ func ToSimpleNotificationResponse(notification *model.Notification) *types.Simpl
 	}
 
 	return &types.SimpleNotificationResponse{
-		ID: notification.ID,
-		Type: notification.Type,
-		Content: notification.Content,
+		ID:        notification.ID,
+		Type:      notification.Type,
+		Content:   notification.Content,
 		ContentID: notification.ContentID,
-		Receiver: notification.Receiver,
-		IsRead: notification.IsRead,
-		ReadAt: notification.ReadAt,
+		Receiver:  notification.Receiver,
+		IsRead:    notification.IsRead,
+		ReadAt:    notification.ReadAt,
 		CreatedAt: notification.CreatedAt,
 		StaffRead: ToNotificationStaffResponse(notification.StaffsRead[0]),
 	}
@@ -636,6 +649,33 @@ func ToSimpleNotificationsResponse(notifications []*model.Notification) []*types
 	}
 
 	return notificationsRes
+}
+
+func ToSimpleRequestTypeResponse(requestType *model.RequestType) *types.SimpleRequestTypeResponse {
+	if requestType == nil {
+		return nil
+	}
+
+	return &types.SimpleRequestTypeResponse{
+		ID:   requestType.ID,
+		Name: requestType.Name,
+		Slug: requestType.Slug,
+	}
+}
+
+func ToSimpleRequestResponse(request *model.Request) *types.SimpleRequestResponse {
+	if request == nil {
+		return nil
+	}
+
+	return &types.SimpleRequestResponse{
+		ID:          request.ID,
+		Code:        request.Code,
+		Content:     request.Content,
+		RequestType: ToSimpleRequestTypeResponse(request.RequestType),
+		Status:      request.Status,
+		CreatedAt:   request.CreatedAt,
+	}
 }
 
 func ToNotificationStaffResponse(notificationStaff *model.NotificationStaff) *types.NotificationStaffResponse {

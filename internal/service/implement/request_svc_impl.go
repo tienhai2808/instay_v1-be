@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/InstaySystem/is-be/internal/common"
 	"github.com/InstaySystem/is-be/internal/model"
@@ -34,7 +35,7 @@ func NewRequestService(
 	notificationRepo repository.Notification,
 	sfGen snowflake.Generator,
 	logger *zap.Logger,
-	mqProvider       mq.MessageQueueProvider,
+	mqProvider mq.MessageQueueProvider,
 ) service.RequestService {
 	return &requestSvcImpl{
 		db,
@@ -78,7 +79,17 @@ func (s *requestSvcImpl) CreateRequestType(ctx context.Context, userID int64, re
 }
 
 func (s *requestSvcImpl) GetRequestTypesForAdmin(ctx context.Context) ([]*model.RequestType, error) {
-	requestTypes, err := s.requestRepo.FindAllRequestTypeWithDetails(ctx)
+	requestTypes, err := s.requestRepo.FindAllRequestTypesWithDetails(ctx)
+	if err != nil {
+		s.logger.Error("get request types for admin failed", zap.Error(err))
+		return nil, err
+	}
+
+	return requestTypes, nil
+}
+
+func (s *requestSvcImpl) GetRequestTypesForGuest(ctx context.Context) ([]*model.RequestType, error) {
+	requestTypes, err := s.requestRepo.FindAllRequestTypesWithDetails(ctx)
 	if err != nil {
 		s.logger.Error("get request types for admin failed", zap.Error(err))
 		return nil, err
@@ -224,4 +235,26 @@ func (s *requestSvcImpl) CreateRequest(ctx context.Context, orderRoomID int64, r
 	}
 
 	return requestID, nil
+}
+
+func (s *requestSvcImpl) GetRequestByCode(ctx context.Context, orderRoomID int64, requestCode string) (*model.Request, error) {
+	request, err := s.requestRepo.FindRequestByCodeWithRequestType(ctx, requestCode)
+	if err != nil {
+		s.logger.Error("find request by code failed", zap.String("code", requestCode), zap.Error(err))
+		return nil, err
+	}
+	if request == nil || request.OrderRoomID != orderRoomID {
+		return nil, common.ErrRequestNotFound
+	}
+
+	updateData := map[string]any{
+		"read_at": time.Now(),
+		"is_read": true,
+	}
+	if err = s.notificationRepo.UpdateNotificationsByContentIDAndTypeAndReceiver(ctx, request.ID, "request", "guest", updateData); err != nil {
+		s.logger.Error("update read request notification failed", zap.Int64("id", request.ID), zap.Error(err))
+		return nil, err
+	}
+
+	return request, nil
 }

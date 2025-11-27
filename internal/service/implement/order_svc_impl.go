@@ -155,34 +155,35 @@ func (s *orderSvcImpl) VerifyOrderRoom(ctx context.Context, secretCode string) (
 	return guestToken, ttl, nil
 }
 
-func (s *orderSvcImpl) CreateOrderService(ctx context.Context, orderRoomID int64, req types.CreateOrderServiceRequest) (int64, error) {
+func (s *orderSvcImpl) CreateOrderService(ctx context.Context, orderRoomID int64, req types.CreateOrderServiceRequest) (string, error) {
 	orderRoom, err := s.orderRepo.FindOrderRoomByIDWithRoom(ctx, orderRoomID)
 	if err != nil {
 		s.logger.Error("find order room by id failed", zap.Int64("id", orderRoomID), zap.Error(err))
-		return 0, err
+		return "", err
 	}
 	if orderRoom == nil {
-		return 0, common.ErrOrderRoomNotFound
+		return "", common.ErrOrderRoomNotFound
 	}
 
 	service, err := s.serviceRepo.FindServiceByIDWithServiceTypeDetails(ctx, req.ServiceID)
 	if err != nil {
 		s.logger.Error("find service by id failed", zap.Int64("id", req.ServiceID), zap.Error(err))
-		return 0, err
+		return "", err
 	}
 	if service == nil {
-		return 0, common.ErrServiceNotFound
+		return "", common.ErrServiceNotFound
 	}
 
 	orderServiceID, err := s.sfGen.NextID()
 	if err != nil {
 		s.logger.Error("generate order service id failed", zap.Error(err))
-		return 0, err
+		return "", err
 	}
 
+	code := common.GenerateCode(5)
 	orderService := &model.OrderService{
 		ID:          orderServiceID,
-		Code:        common.GenerateCode(5),
+		Code:        code,
 		OrderRoomID: orderRoomID,
 		ServiceID:   req.ServiceID,
 		Quantity:    req.Quantity,
@@ -242,10 +243,10 @@ func (s *orderSvcImpl) CreateOrderService(ctx context.Context, orderRoomID int64
 
 		return nil
 	}); err != nil {
-		return 0, err
+		return "", err
 	}
 
-	return orderServiceID, nil
+	return code, nil
 }
 
 func (s *orderSvcImpl) GetOrderServiceByCode(ctx context.Context, orderRoomID int64, orderServiceCode string) (*model.OrderService, error) {

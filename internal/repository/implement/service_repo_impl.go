@@ -194,7 +194,7 @@ func (r *serviceRepoImpl) UpdateServiceImageTx(ctx context.Context, tx *gorm.DB,
 	return tx.WithContext(ctx).Model(&model.ServiceImage{}).Where("id = ?", serviceImageID).Updates(updateData).Error
 }
 
-func (r *serviceRepoImpl) CreateAllServiceImageTx(ctx context.Context, tx *gorm.DB, serviceImages []*model.ServiceImage) error {
+func (r *serviceRepoImpl) CreateServiceImagesTx(ctx context.Context, tx *gorm.DB, serviceImages []*model.ServiceImage) error {
 	return tx.WithContext(ctx).Create(serviceImages).Error
 }
 
