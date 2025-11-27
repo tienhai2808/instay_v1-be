@@ -366,3 +366,24 @@ func (h *OrderHandler) UpdateOrderServiceForAdmin(c *gin.Context) {
 
 	common.ToAPIResponse(c, http.StatusOK, "Order service updated successfully", nil)
 }
+
+func (h *OrderHandler) GetOrderServicesForGuest(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	orderRoomID := c.GetInt64("order_room_id")
+	if orderRoomID == 0 {
+		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		return
+	}
+
+	orderServices, err := h.orderSvc.GetOrderServicesForGuest(ctx, orderRoomID)
+	if err != nil {
+		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		return
+	}
+
+	common.ToAPIResponse(c, http.StatusOK, "Get order service list successfully", gin.H{
+		"order_services": common.ToBasicOrderServicesResponse(orderServices),
+	})
+}

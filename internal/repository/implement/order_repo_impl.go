@@ -97,6 +97,15 @@ func (r *orderRepoImpl) FindOrderServiceByIDWithDetails(ctx context.Context, ord
 	return &orderService, nil
 }
 
+func (r *orderRepoImpl) FindAllOrderServicesByOrderRoomIDWithDetails(ctx context.Context, orderRoomID int64) ([]*model.OrderService, error) {
+	var orderServices []*model.OrderService
+	if err := r.db.WithContext(ctx).Preload("Service.ServiceType").Where("order_room_id = ?", orderRoomID).Find(&orderServices).Error; err != nil {
+		return nil, err
+	}
+
+	return orderServices, nil
+}
+
 func (r *orderRepoImpl) FindAllOrderServicesWithDetailsPaginated(ctx context.Context, query types.OrderServicePaginationQuery, departmentID *int64) ([]*model.OrderService, int64, error) {
 	var orderServices []*model.OrderService
 	var total int64

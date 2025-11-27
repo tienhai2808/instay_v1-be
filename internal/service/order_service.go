@@ -26,4 +26,6 @@ type OrderService interface {
 	UpdateOrderServiceForAdmin(ctx context.Context, departmentID *int64, userID, orderServiceID int64, req types.UpdateOrderServiceRequest) error
 
 	GetOrderServicesForAdmin(ctx context.Context, query types.OrderServicePaginationQuery, departmentID *int64) ([]*model.OrderService, *types.MetaResponse, error)
+
+	GetOrderServicesForGuest(ctx context.Context, orderRoomID int64) ([]*model.OrderService, error)
 }

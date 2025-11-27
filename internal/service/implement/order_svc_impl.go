@@ -522,3 +522,13 @@ func (s *orderSvcImpl) UpdateOrderServiceForAdmin(ctx context.Context, departmen
 
 	return nil
 }
+
+func (s *orderSvcImpl) GetOrderServicesForGuest(ctx context.Context, orderRoomID int64) ([]*model.OrderService, error) {
+	orderServices, err := s.orderRepo.FindAllOrderServicesByOrderRoomIDWithDetails(ctx, orderRoomID)
+	if err != nil {
+		s.logger.Error("find all order services by order room ID failed", zap.Error(err))
+		return nil, err
+	}
+
+	return orderServices, nil
+}

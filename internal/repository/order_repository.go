@@ -25,5 +25,7 @@ type OrderRepository interface {
 
 	FindOrderServiceByIDWithDetails(ctx context.Context, orderServiceID int64) (*model.OrderService, error)
 
+	FindAllOrderServicesByOrderRoomIDWithDetails(ctx context.Context, orderRoomID int64) ([]*model.OrderService, error)
+
 	FindAllOrderServicesWithDetailsPaginated(ctx context.Context, query types.OrderServicePaginationQuery, departmentID *int64) ([]*model.OrderService, int64, error)
 }
