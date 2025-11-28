@@ -47,6 +47,7 @@ func (w *MQWorker) Start() {
 	go w.startSendAuthEmail()
 	go w.startDeleteFile()
 	go w.startSendServiceNotification()
+	go w.startSendRequestNotification()
 }
 
 func (w *MQWorker) startSendAuthEmail() {
@@ -122,5 +123,37 @@ func (w *MQWorker) startSendServiceNotification() {
 		return nil
 	}); err != nil {
 		w.logger.Error("start consumer send service notification failed", zap.Error(err))
+	}
+}
+
+func (w *MQWorker) startSendRequestNotification() {
+	if err := w.mq.ConsumeMessage(common.QueueNameRequestNotification, common.ExchangeNotification, common.RoutingKeyRequestNotification, func(body []byte) error {
+		var requestNotificationMsg types.NotificationMessage
+		if err := json.Unmarshal(body, &requestNotificationMsg); err != nil {
+			return err
+		}
+
+		data := map[string]any{
+			"content":      requestNotificationMsg.Content,
+			"content_id":   requestNotificationMsg.ContentID,
+			"content_type": requestNotificationMsg.Type,
+			"receiver":     requestNotificationMsg.Receiver,
+		}
+
+		event := types.SSEEventData{
+			Event:        "request",
+			Type:         requestNotificationMsg.Receiver,
+			DepartmentID: requestNotificationMsg.DepartmentID,
+			Data:         data,
+		}
+
+		for _, clientID := range requestNotificationMsg.ReceiverIDs {
+			w.sseHub.SendToClient(clientID, event)
+		}
+
+		w.logger.Info("Request notification sent successfully")
+		return nil
+	}); err != nil {
+		w.logger.Error("start consumer send request notification failed", zap.Error(err))
 	}
 }

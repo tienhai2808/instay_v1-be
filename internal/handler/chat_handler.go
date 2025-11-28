@@ -61,3 +61,24 @@ func (h *ChatHandler) GetChatsForAdmin(c *gin.Context) {
 		"meta":  meta,
 	})
 }
+
+func (h *ChatHandler) GetChatsForGuest(c *gin.Context) {
+	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
+	defer cancel()
+
+	orderRoomID := c.GetInt64("order_room_id")
+	if orderRoomID == 0 {
+		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		return
+	}
+
+	chats, err := h.chatSvc.GetChatsForGuest(ctx, orderRoomID)
+	if err != nil {
+		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		return
+	}
+
+	common.ToAPIResponse(c, http.StatusOK, "Get chat list successfully", gin.H{
+		"chats": common.ToBasicChatsResponse(chats),
+	})
+}

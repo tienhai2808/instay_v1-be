@@ -778,6 +778,22 @@ func ToSimpleMessageResponse(message *model.Message) *types.SimpleMessageRespons
 	}
 }
 
+func ToBasicMessageResponse(message *model.Message) *types.BasicMessageResponse {
+	if message == nil {
+		return nil
+	}
+
+	return &types.BasicMessageResponse{
+		ID:         message.ID,
+		Content:    message.Content,
+		ImageKey:   message.ImageKey,
+		SenderType: message.SenderType,
+		CreatedAt:  message.CreatedAt,
+		IsRead:     message.IsRead,
+		ReadAt:     message.ReadAt,
+	}
+}
+
 func ToBasicRequestsResponse(requests []*model.Request) []*types.BasicRequestResponse {
 	if len(requests) == 0 {
 		return make([]*types.BasicRequestResponse, 0)
@@ -789,6 +805,32 @@ func ToBasicRequestsResponse(requests []*model.Request) []*types.BasicRequestRes
 	}
 
 	return requestsRes
+}
+
+func ToBasicChatResponse(chat *model.Chat) *types.BasicChatResponse {
+	if chat == nil {
+		return nil
+	}
+
+	return &types.BasicChatResponse{
+		ID:          chat.ID,
+		Department:  ToSimpleDepartmentResponse(chat.Department),
+		ExpiredAt:   chat.ExpiredAt,
+		LastMessage: ToBasicMessageResponse(chat.Messages[0]),
+	}
+}
+
+func ToBasicChatsResponse(chats []*model.Chat) []*types.BasicChatResponse {
+	if len(chats) == 0 {
+		return make([]*types.BasicChatResponse, 0)
+	}
+
+	chatsRes := make([]*types.BasicChatResponse, 0, len(chats))
+	for _, chat := range chats {
+		chatsRes = append(chatsRes, ToBasicChatResponse(chat))
+	}
+
+	return chatsRes
 }
 
 func ToSimpleOrderRoomResponse(orderRoom *model.OrderRoom) *types.SimpleOrderRoomResponse {
@@ -811,7 +853,6 @@ func ToSimpleChatResponse(chat *model.Chat) *types.SimpleChatResponse {
 	return &types.SimpleChatResponse{
 		ID:          chat.ID,
 		OrderRoom:   ToSimpleOrderRoomResponse(chat.OrderRoom),
-		Department:  ToSimpleDepartmentResponse(chat.Department),
 		ExpiredAt:   chat.ExpiredAt,
 		LastMessage: ToSimpleMessageResponse(chat.Messages[0]),
 	}

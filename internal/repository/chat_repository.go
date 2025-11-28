@@ -18,4 +18,6 @@ type ChatRepository interface {
 	UpdateChatTx(tx *gorm.DB, chatID int64, updateData map[string]any) error
 
 	FindAllChatsByDepartmentIDWithDetailsPaginated(ctx context.Context, query types.ChatPaginationQuery, staffID, departmentID int64) ([]*model.Chat, int64, error)
+
+	FindAllChatsByOrderRoomIDWithDetails(ctx context.Context, orderRoomID int64) ([]*model.Chat, error)
 }

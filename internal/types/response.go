@@ -354,9 +354,25 @@ type MessageStaffResponse struct {
 }
 
 type SimpleChatResponse struct {
+	ID          int64                    `json:"id"`
+	OrderRoom   *SimpleOrderRoomResponse `json:"order_room"`
+	ExpiredAt   time.Time                `json:"expired_at"`
+	LastMessage *SimpleMessageResponse   `json:"last_message"`
+}
+
+type BasicChatResponse struct {
 	ID          int64                     `json:"id"`
-	OrderRoom   *SimpleOrderRoomResponse  `json:"order_room"`
 	Department  *SimpleDepartmentResponse `json:"department"`
 	ExpiredAt   time.Time                 `json:"expired_at"`
-	LastMessage *SimpleMessageResponse    `json:"last_message"`
+	LastMessage *BasicMessageResponse     `json:"last_message"`
+}
+
+type BasicMessageResponse struct {
+	ID         int64      `json:"id"`
+	Content    *string    `json:"content"`
+	ImageKey   *string    `json:"image_key"`
+	SenderType string     `json:"sender_type"`
+	CreatedAt  time.Time  `json:"created_at"`
+	IsRead     bool       `json:"is_read"`
+	ReadAt     *time.Time `json:"read_at"`
 }

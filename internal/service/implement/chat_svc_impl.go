@@ -76,7 +76,7 @@ func (s *chatSvcImpl) CreateMessage(ctx context.Context, clientID int64, departm
 		}
 
 		if req.ChatID != nil {
-			if err =  s.chatRepo.UpdateChatTx(tx, chat.ID, map[string]any{"last_message_at": now}); err != nil {
+			if err = s.chatRepo.UpdateChatTx(tx, chat.ID, map[string]any{"last_message_at": now}); err != nil {
 				s.logger.Error("update chat failed", zap.Error(err))
 				return err
 			}
@@ -121,6 +121,16 @@ func (s *chatSvcImpl) GetChatsForAdmin(ctx context.Context, query types.ChatPagi
 	}
 
 	return chats, meta, nil
+}
+
+func (s *chatSvcImpl) GetChatsForGuest(ctx context.Context, orderRoomID int64) ([]*model.Chat, error) {
+	chats, err := s.chatRepo.FindAllChatsByOrderRoomIDWithDetails(ctx, orderRoomID)
+	if err != nil {
+		s.logger.Error("find all chats by order room id failed", zap.Error(err))
+		return nil, err
+	}
+
+	return chats, nil
 }
 
 func (s *chatSvcImpl) getOrCreateChat(tx *gorm.DB, req types.CreateMessageRequest, clientID int64, departmentID *int64, senderType string, now time.Time) (*model.Chat, error) {

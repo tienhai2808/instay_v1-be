@@ -65,3 +65,19 @@ func (r *chatRepoImpl) FindAllChatsByDepartmentIDWithDetailsPaginated(ctx contex
 
 	return chats, total, nil
 }
+
+func (r *chatRepoImpl) FindAllChatsByOrderRoomIDWithDetails(ctx context.Context, orderRoomID int64) ([]*model.Chat, error) {
+	var chats []*model.Chat
+	if err := r.db.WithContext(ctx).Where("order_room_id = ?", orderRoomID).Order("last_message_at DESC").
+		Preload("Department").Preload("Messages", func(db *gorm.DB) *gorm.DB {
+		return db.Raw(`
+				SELECT m.* FROM messages m
+				JOIN chats c ON m.chat_id = c.id
+				WHERE m.created_at = c.last_message_at
+			`)
+	}).Find(&chats).Error; err != nil {
+		return nil, err
+	}
+
+	return chats, nil
+}

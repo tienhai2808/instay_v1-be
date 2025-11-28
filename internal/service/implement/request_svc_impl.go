@@ -179,6 +179,7 @@ func (s *requestSvcImpl) CreateRequest(ctx context.Context, orderRoomID int64, r
 		Content:       req.Content,
 		Status:        "pending",
 		RequestTypeID: requestType.ID,
+		OrderRoomID:   orderRoomID,
 	}
 
 	if err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
