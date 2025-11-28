@@ -571,6 +571,7 @@ func ToBasicOrderServiceResponse(orderService *model.OrderService) *types.BasicO
 		Quantity:    orderService.Quantity,
 		TotalPrice:  orderService.TotalPrice,
 		Status:      orderService.Status,
+		CreatedAt:   orderService.CreatedAt,
 	}
 }
 
@@ -713,4 +714,50 @@ func ToNotificationStaffResponse(notificationStaff *model.NotificationStaff) *ty
 		ID:     notificationStaff.ID,
 		ReadAt: notificationStaff.ReadAt,
 	}
+}
+
+func ToRequestResponse(request *model.Request) *types.RequestResponse {
+	if request == nil {
+		return nil
+	}
+
+	return &types.RequestResponse{
+		ID:          request.ID,
+		Code:        request.Code,
+		RequestType: ToSimpleRequestTypeResponse(request.RequestType),
+		OrderRoom:   ToSimpleOrderRoomResponse(request.OrderRoom),
+		Content:     request.Content,
+		Status:      request.Status,
+		CreatedAt:   request.CreatedAt,
+		UpdatedAt:   request.UpdatedAt,
+		UpdatedBy:   ToBasicUserResponse(request.UpdatedBy),
+	}
+}
+
+func ToBasicRequestResponse(request *model.Request) *types.BasicRequestResponse {
+	if request == nil {
+		return nil
+	}
+
+	return &types.BasicRequestResponse{
+		ID:              request.ID,
+		Code:            request.Code,
+		RequestTypeName: request.RequestType.Name,
+		RoomName:        request.OrderRoom.Room.Name,
+		Status:          request.Status,
+		CreatedAt:       request.CreatedAt,
+	}
+}
+
+func ToBasicRequestsResponse(requests []*model.Request) []*types.BasicRequestResponse {
+	if len(requests) == 0 {
+		return make([]*types.BasicRequestResponse, 0)
+	}
+
+	requestsRes := make([]*types.BasicRequestResponse, 0, len(requests))
+	for _, request := range requests {
+		requestsRes = append(requestsRes, ToBasicRequestResponse(request))
+	}
+
+	return requestsRes
 }

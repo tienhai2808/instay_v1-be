@@ -20,6 +20,15 @@ func RequestRouter(rg *gin.RouterGroup, hdl *handler.RequestHandler, authMid *mi
 
 	rg.GET("/request-types", hdl.GetRequestTypesForGuest)
 
+	admin = rg.Group("/admin/requests", authMid.IsAuthentication())
+	{
+		admin.PUT("/:id", hdl.UpdateRequestForAdmin)
+
+		admin.GET("/:id", hdl.GetRequestByID)
+
+		admin.GET("", hdl.GetRequestsForAdmin)
+	}
+
 	guest := rg.Group("/requests", authMid.HasGuestToken())
 	{
 		guest.POST("", hdl.CreateRequest)

@@ -29,9 +29,9 @@ func (r *notificationRepoImpl) UpdateNotifications(ctx context.Context, notifica
 	return r.db.WithContext(ctx).Model(&model.Notification{}).Where("id IN ?", notificationIDs).Updates(updateData).Error
 }
 
-func (r *notificationRepoImpl) FindAllUnreadNotificationsByContentIDAndTypeAndReceiver(ctx context.Context, staffID, contentID int64, contentType, receiver string) ([]*model.Notification, error) {
+func (r *notificationRepoImpl) FindAllUnreadNotificationsByContentIDAndType(ctx context.Context, staffID, contentID int64, contentType string) ([]*model.Notification, error) {
 	var notifications []*model.Notification
-	if err := r.db.WithContext(ctx).Where("content_id = ? AND type = ? AND receiver = ?", contentID, contentType, receiver).Where("id NOT IN (?)",
+	if err := r.db.WithContext(ctx).Where("content_id = ? AND type = ? AND receiver = ?", contentID, contentType, "staff").Where("id NOT IN (?)",
 		r.db.Model(&model.NotificationStaff{}).
 			Select("notification_id").
 			Where("staff_id = ?", staffID),

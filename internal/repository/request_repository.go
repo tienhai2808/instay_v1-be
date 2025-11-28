@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/InstaySystem/is-be/internal/model"
+	"github.com/InstaySystem/is-be/internal/types"
 	"gorm.io/gorm"
 )
 
@@ -31,4 +32,8 @@ type RequestRepository interface {
 	UpdateRequestTx(ctx context.Context, tx *gorm.DB, requestID int64, updateData map[string]any) error
 
 	FindAllRequestsByOrderRoomIDWithDetails(ctx context.Context, orderRoomID int64) ([]*model.Request, error)
+
+	FindRequestByIDWithDetails(ctx context.Context, requestID int64) (*model.Request, error)
+
+	FindAllRequestsWithDetailsPaginated(ctx context.Context, query types.RequestPaginationQuery, departmentID *int64) ([]*model.Request, int64, error)
 }

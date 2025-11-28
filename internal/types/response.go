@@ -245,13 +245,14 @@ type SimpleOrderServiceResponse struct {
 }
 
 type BasicOrderServiceResponse struct {
-	ID          int64   `json:"id"`
-	Code        string  `json:"code"`
-	ServiceName string  `json:"service_name"`
-	RoomName    string  `json:"room_name"`
-	Quantity    uint32  `json:"quantity"`
-	TotalPrice  float64 `json:"total_price"`
-	Status      string  `json:"status"`
+	ID          int64     `json:"id"`
+	Code        string    `json:"code"`
+	ServiceName string    `json:"service_name"`
+	RoomName    string    `json:"room_name"`
+	Quantity    uint32    `json:"quantity"`
+	TotalPrice  float64   `json:"total_price"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 type OrderServiceResponse struct {
@@ -306,4 +307,25 @@ type SimpleRequestResponse struct {
 	Content     string                     `json:"content"`
 	Status      string                     `json:"status"`
 	CreatedAt   time.Time                  `json:"created_at"`
+}
+
+type RequestResponse struct {
+	ID          int64                      `json:"id"`
+	Code        string                     `json:"code"`
+	RequestType *SimpleRequestTypeResponse `json:"request_type"`
+	OrderRoom   *SimpleOrderRoomResponse   `json:"order_room"`
+	Content     string                     `json:"content"`
+	Status      string                     `json:"status"`
+	CreatedAt   time.Time                  `json:"created_at"`
+	UpdatedAt   time.Time                  `json:"updated_at"`
+	UpdatedBy   *BasicUserResponse         `json:"updated_by"`
+}
+
+type BasicRequestResponse struct {
+	ID              int64     `json:"id"`
+	Code            string    `json:"code"`
+	RequestTypeName string    `json:"request_type_name"`
+	RoomName        string    `json:"room_name"`
+	Status          string    `json:"status"`
+	CreatedAt       time.Time `json:"created_at"`
 }

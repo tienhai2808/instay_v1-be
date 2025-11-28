@@ -20,7 +20,13 @@ type RequestService interface {
 
 	CreateRequest(ctx context.Context, orderRoomID int64, req types.CreateRequestRequest) (int64, error)
 
-	UpdateRequestForGuest(ctx context.Context, orderRoomID, requestID int64, req types.UpdateRequestRequest) error
+	UpdateRequestForGuest(ctx context.Context, orderRoomID, requestID int64, status string) error
 
 	GetRequestsForGuest(ctx context.Context, orderRoomID int64) ([]*model.Request, error)
+
+	GetRequestByID(ctx context.Context, userID, requestID int64, departmentID *int64) (*model.Request, error)
+
+	UpdateRequestForAdmin(ctx context.Context, departmentID *int64, userID, requestID int64, status string) error
+
+	GetRequestsForAdmin(ctx context.Context, query types.RequestPaginationQuery, departmentID *int64) ([]*model.Request, *types.MetaResponse, error)
 }

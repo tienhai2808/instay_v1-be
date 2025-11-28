@@ -238,7 +238,7 @@ func (s *requestSvcImpl) CreateRequest(ctx context.Context, orderRoomID int64, r
 	return requestID, nil
 }
 
-func (s *requestSvcImpl) UpdateRequestForGuest(ctx context.Context, orderRoomID, requestID int64, req types.UpdateRequestRequest) error {
+func (s *requestSvcImpl) UpdateRequestForGuest(ctx context.Context, orderRoomID, requestID int64, status string) error {
 	orderRoom, err := s.orderRepo.FindOrderRoomByIDWithRoom(ctx, orderRoomID)
 	if err != nil {
 		s.logger.Error("find order room by id failed", zap.Int64("id", orderRoomID), zap.Error(err))
@@ -261,11 +261,11 @@ func (s *requestSvcImpl) UpdateRequestForGuest(ctx context.Context, orderRoomID,
 			return common.ErrRequestNotFound
 		}
 
-		if request.Status != "pending" || req.Status != "canceled" {
+		if request.Status != "pending" || status != "canceled" {
 			return common.ErrInvalidStatus
 		}
 
-		if err = s.requestRepo.UpdateRequestTx(ctx, tx, requestID, map[string]any{"status": req.Status}); err != nil {
+		if err = s.requestRepo.UpdateRequestTx(ctx, tx, requestID, map[string]any{"status": status}); err != nil {
 			s.logger.Error("update request failed", zap.Int64("id", requestID), zap.Error(err))
 			return err
 		}
@@ -338,4 +338,160 @@ func (s *requestSvcImpl) GetRequestsForGuest(ctx context.Context, orderRoomID in
 	}
 
 	return requests, nil
+}
+
+func (s *requestSvcImpl) GetRequestByID(ctx context.Context, userID, requestID int64, departmentID *int64) (*model.Request, error) {
+	request, err := s.requestRepo.FindRequestByIDWithDetails(ctx, requestID)
+	if err != nil {
+		s.logger.Error("find request by id failed", zap.Int64("id", requestID), zap.Error(err))
+		return nil, err
+	}
+	if request == nil {
+		return nil, common.ErrRequestNotFound
+	}
+	if departmentID != nil && request.RequestType.DepartmentID != *departmentID {
+		return nil, common.ErrRequestNotFound
+	}
+
+	unreadNotifications, err := s.notificationRepo.FindAllUnreadNotificationsByContentIDAndType(ctx, userID, requestID, "request")
+	if err != nil {
+		s.logger.Error("find unread notifications failed", zap.Error(err))
+		return nil, err
+	}
+
+	if len(unreadNotifications) > 0 {
+		notificationStaffs := make([]*model.NotificationStaff, 0, len(unreadNotifications))
+		for _, notification := range unreadNotifications {
+			id, err := s.sfGen.NextID()
+			if err != nil {
+				s.logger.Error("generate notification staff id failed", zap.Error(err))
+				return nil, err
+			}
+
+			notificationStaffs = append(notificationStaffs, &model.NotificationStaff{
+				ID:             id,
+				NotificationID: notification.ID,
+				StaffID:        userID,
+			})
+		}
+
+		if err = s.notificationRepo.CreateNotificationStaffs(ctx, notificationStaffs); err != nil {
+			s.logger.Error("create notification staffs failed", zap.Error(err))
+			return nil, err
+		}
+	}
+
+	return request, nil
+}
+
+func (s *requestSvcImpl) UpdateRequestForAdmin(ctx context.Context, departmentID *int64, userID, requestID int64, status string) error {
+	if err := s.db.Transaction(func(tx *gorm.DB) error {
+		request, err := s.requestRepo.FindRequestByIDWithRequestTypeDetailsTx(ctx, tx, requestID)
+		if err != nil {
+			if strings.Contains(err.Error(), "lock") {
+				return common.ErrLockedRecord
+			}
+			s.logger.Error("find request by id failed", zap.Int64("id", requestID), zap.Error(err))
+			return err
+		}
+		if request == nil {
+			return common.ErrRequestNotFound
+		}
+
+		if departmentID != nil && request.RequestType.DepartmentID != *departmentID {
+			return common.ErrRequestNotFound
+		}
+
+		if (request.Status == "pending" && status != "accepted") || (request.Status == "accepted" && status != "done") {
+			return common.ErrInvalidStatus
+		}
+
+		updateData := map[string]any{
+			"status":        status,
+			"updated_by_id": userID,
+		}
+		if err = s.requestRepo.UpdateRequestTx(ctx, tx, requestID, updateData); err != nil {
+			s.logger.Error("update request failed", zap.Int64("id", requestID), zap.Error(err))
+			return err
+		}
+
+		notificationID, err := s.sfGen.NextID()
+		if err != nil {
+			s.logger.Error("generate notification id failed", zap.Error(err))
+			return err
+		}
+
+		displayStatus := "được chấp nhận"
+		if status == "done" {
+			displayStatus = "hoàn thành"
+		}
+
+		content := fmt.Sprintf("Yêu cầu %s đã %s", request.RequestType.Name, displayStatus)
+		notification := &model.Notification{
+			ID:           notificationID,
+			DepartmentID: request.RequestType.DepartmentID,
+			Type:         "request",
+			Receiver:     "guest",
+			Content:      content,
+			ContentID:    request.ID,
+			OrderRoomID:  request.OrderRoomID,
+		}
+
+		if err = s.notificationRepo.CreateNotificationTx(ctx, tx, notification); err != nil {
+			s.logger.Error("create notification failed", zap.Error(err))
+			return err
+		}
+
+		requestNotificationMsg := types.NotificationMessage{
+			Content:     notification.Content,
+			Type:        notification.Type,
+			ContentID:   notification.ContentID,
+			Receiver:    notification.Receiver,
+			ReceiverIDs: []int64{request.OrderRoomID},
+		}
+
+		go func(msg types.NotificationMessage) {
+			body, _ := json.Marshal(msg)
+			if err := s.mqProvider.PublishMessage(common.ExchangeNotification, common.RoutingKeyRequestNotification, body); err != nil {
+				s.logger.Error("publish request notification message failed", zap.Error(err))
+			}
+		}(requestNotificationMsg)
+
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *requestSvcImpl) GetRequestsForAdmin(ctx context.Context, query types.RequestPaginationQuery, departmentID *int64) ([]*model.Request, *types.MetaResponse, error) {
+	if query.Page == 0 {
+		query.Page = 1
+	}
+	if query.Limit == 0 {
+		query.Limit = 10
+	}
+
+	requests, total, err := s.requestRepo.FindAllRequestsWithDetailsPaginated(ctx, query, departmentID)
+	if err != nil {
+		s.logger.Error("find all requests paginated failed", zap.Error(err))
+		return nil, nil, err
+	}
+
+	totalPages := uint32(total) / query.Limit
+	if uint32(total)%query.Limit != 0 {
+		totalPages++
+	}
+
+	meta := &types.MetaResponse{
+		Total:      uint64(total),
+		Page:       query.Page,
+		Limit:      query.Limit,
+		TotalPages: uint16(totalPages),
+		HasPrev:    query.Page > 1,
+		HasNext:    query.Page < totalPages,
+	}
+
+	return requests, meta, nil
 }

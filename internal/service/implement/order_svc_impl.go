@@ -262,7 +262,7 @@ func (s *orderSvcImpl) GetOrderServiceByID(ctx context.Context, userID int64, or
 		return nil, common.ErrOrderServiceNotFound
 	}
 
-	unreadNotifications, err := s.notificationRepo.FindAllUnreadNotificationsByContentIDAndTypeAndReceiver(ctx, userID, orderServiceID, "service", "staff")
+	unreadNotifications, err := s.notificationRepo.FindAllUnreadNotificationsByContentIDAndType(ctx, userID, orderServiceID, "service")
 	if err != nil {
 		s.logger.Error("find unread notifications failed", zap.Error(err))
 		return nil, err
@@ -456,9 +456,9 @@ func (s *orderSvcImpl) UpdateOrderServiceForAdmin(ctx context.Context, departmen
 			return err
 		}
 
-		displayStatus := "đã được chấp nhận"
+		displayStatus := "được chấp nhận"
 		if req.Status == "rejected" {
-			displayStatus = "đã bị từ chối"
+			displayStatus = "bị từ chối"
 		}
 
 		content := fmt.Sprintf("%d %s đã %s", orderService.Quantity, orderService.Service.Name, displayStatus)

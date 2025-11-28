@@ -2,11 +2,15 @@ package implement
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"strings"
+	"time"
 
 	"github.com/InstaySystem/is-be/internal/common"
 	"github.com/InstaySystem/is-be/internal/model"
 	"github.com/InstaySystem/is-be/internal/repository"
+	"github.com/InstaySystem/is-be/internal/types"
 	"gorm.io/gorm"
 )
 
@@ -129,4 +133,96 @@ func (r *requestRepoImpl) FindAllRequestsByOrderRoomIDWithDetails(ctx context.Co
 	}
 
 	return requests, nil
+}
+
+func (r *requestRepoImpl) FindRequestByIDWithDetails(ctx context.Context, requestID int64) (*model.Request, error) {
+	var request model.Request
+	if err := r.db.WithContext(ctx).Preload("OrderRoom.Room.RoomType").Preload("OrderRoom.Room.Floor").Preload("UpdatedBy").Preload("RequestType.Department.Staffs").Where("id = ?", requestID).First(&request).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &request, nil
+}
+
+func (r *requestRepoImpl) FindAllRequestsWithDetailsPaginated(ctx context.Context, query types.RequestPaginationQuery, departmentID *int64) ([]*model.Request, int64, error) {
+	var requests []*model.Request
+	var total int64
+
+	db := r.db.WithContext(ctx).Preload("OrderRoom.Room").Preload("RequestType").Model(&model.Request{})
+	db = applyRequestFilters(db, query)
+
+	if departmentID != nil {
+		db = db.Joins("JOIN request_types rt ON rt.id = requests.request_type_id").
+			Where("rt.department_id = ?", *departmentID)
+	}
+
+	if err := db.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	db = applyRequestSorting(db, query)
+	offset := (query.Page - 1) * query.Limit
+	if err := db.Offset(int(offset)).Limit(int(query.Limit)).Find(&requests).Error; err != nil {
+		return nil, 0, err
+	}
+
+	return requests, total, nil
+}
+
+func applyRequestFilters(db *gorm.DB, query types.RequestPaginationQuery) *gorm.DB {
+	if query.Search != "" {
+		searchTerm := "%" + strings.ToLower(query.Search) + "%"
+		db = db.Where(
+			"LOWER(code) LIKE @q",
+			sql.Named("q", searchTerm),
+		)
+	}
+
+	if query.Status != "" {
+		db = db.Where("status = ?", query.Status)
+	}
+
+	if query.From != "" || query.To != "" {
+		const layout = "2006-01-02"
+
+		if query.From != "" {
+			if parsedFrom, err := time.Parse(layout, query.From); err == nil {
+				db = db.Where("created_at >= ?", parsedFrom)
+			}
+		}
+
+		if query.To != "" {
+			if parsedTo, err := time.Parse(layout, query.To); err == nil {
+				endOfDay := parsedTo.AddDate(0, 0, 1)
+				db = db.Where("created_at < ?", endOfDay)
+			}
+		}
+	}
+
+	return db
+}
+
+func applyRequestSorting(db *gorm.DB, query types.RequestPaginationQuery) *gorm.DB {
+	if query.Sort == "" {
+		query.Sort = "created_at"
+	}
+	if query.Order == "" {
+		query.Order = "desc"
+	}
+
+	allowedSorts := map[string]bool{
+		"created_at": true,
+		"code":       true,
+	}
+
+	if allowedSorts[query.Sort] {
+		db = db.Order(query.Sort + " " + strings.ToUpper(query.Order))
+	} else {
+		db = db.Order("created_at DESC")
+	}
+
+	return db
 }
