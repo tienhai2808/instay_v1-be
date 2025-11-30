@@ -82,4 +82,8 @@ var (
 	ErrChatNotFound = errors.New("chat not found")
 
 	ErrInvalidStatus = errors.New("invalid status")
+
+	ErrOrderRoomReviewed = errors.New("order room reviewed")
+
+	ErrReviewNotFound = errors.New("review not found")
 )

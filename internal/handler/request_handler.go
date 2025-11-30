@@ -175,7 +175,7 @@ func (h *RequestHandler) CreateRequest(c *gin.Context) {
 		return
 	}
 
-	code, err := h.requestSvc.CreateRequest(ctx, orderRoomID, req)
+	id, err := h.requestSvc.CreateRequest(ctx, orderRoomID, req)
 	if err != nil {
 		switch err {
 		case common.ErrRequestTypeNotFound:
@@ -189,7 +189,7 @@ func (h *RequestHandler) CreateRequest(c *gin.Context) {
 	}
 
 	common.ToAPIResponse(c, http.StatusCreated, "Request created successful", gin.H{
-		"code": code,
+		"id": id,
 	})
 }
 

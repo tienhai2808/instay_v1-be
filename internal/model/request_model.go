@@ -20,7 +20,6 @@ type RequestType struct {
 
 type Request struct {
 	ID            int64     `gorm:"type:bigint;primaryKey" json:"id"`
-	Code          string    `gorm:"type:char(10);not null;uniqueIndex:requests_code_key" json:"code"`
 	Content       string    `gorm:"type:text;not null" json:"content"`
 	Status        string    `gorm:"type:varchar(20);check:status IN ('pending', 'accepted', 'cancelled', 'done')" json:"status"`
 	CreatedAt     time.Time `gorm:"autoCreateTime" json:"created_at"`

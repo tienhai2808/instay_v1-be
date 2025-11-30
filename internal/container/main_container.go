@@ -32,6 +32,7 @@ type Container struct {
 	OrderCtn        *OrderContainer
 	NotificationCtn *NotificationContainer
 	ChatCtn         *ChatContainer
+	ReviewCtn       *ReviewContainer
 	SSECtn          *SSEContainer
 	WSCtn           *WSContainer
 	AuthMid         *middleware.AuthMiddleware
@@ -71,6 +72,7 @@ func NewContainer(
 	orderRepo := repoImpl.NewOrderRepository(db)
 	notificationRepo := repoImpl.NewNotificationRepository(db)
 	chatRepo := repoImpl.NewChatRepository(db)
+	reviewRepo := repoImpl.NewReviewRepository(db)
 
 	fileCtn := NewFileContainer(cfg, s3, logger)
 	authCtn := NewAuthContainer(cfg, db, logger, bHash, jwtProvider, cacheProvider, mqProvider)
@@ -83,6 +85,7 @@ func NewContainer(
 	orderCtn := NewOrderContainer(db, orderRepo, bookingRepo, serviceRepo, notificationRepo, sfGen, logger, cacheProvider, jwtProvider, mqProvider, cfg.JWT.GuestName)
 	notificationCtn := NewNotificationContainer(db, notificationRepo, logger, sfGen)
 	chatCtn := NewChatContainer(db, chatRepo, orderRepo, sfGen, logger)
+	reviewCtn := NewReviewContainer(reviewRepo, sfGen, logger)
 	wsHub := hub.NewWSHub(chatCtn.Svc)
 	sseCtn := NewSSEContainer(sseHub)
 	wsCtn := NewWSContainer(wsHub)
@@ -102,6 +105,7 @@ func NewContainer(
 		orderCtn,
 		notificationCtn,
 		chatCtn,
+		reviewCtn,
 		sseCtn,
 		wsCtn,
 		authMid,

@@ -174,7 +174,6 @@ func (s *requestSvcImpl) CreateRequest(ctx context.Context, orderRoomID int64, r
 	}
 
 	request := &model.Request{
-		Code:          common.GenerateCode(5),
 		ID:            requestID,
 		Content:       req.Content,
 		Status:        "pending",

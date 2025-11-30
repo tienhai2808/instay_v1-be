@@ -15,6 +15,7 @@ type OrderRoom struct {
 	Booking       *Booking        `gorm:"foreignKey:BookingID;references:ID;constraint:fk_order_rooms_booking,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"booking"`
 	CreatedBy     *User           `gorm:"foreignKey:CreatedByID;references:ID;constraint:fk_order_rooms_created_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"created_by"`
 	UpdatedBy     *User           `gorm:"foreignKey:UpdatedByID;references:ID;constraint:fk_order_rooms_updated_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"updated_by"`
+	Review        *Review         `gorm:"foreignKey:OrderRoomID;references:ID;constraint:fk_reviews_order_room,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"review"`
 	OrderServices []*OrderService `gorm:"foreignKey:OrderRoomID;references:ID;constraint:fk_order_services_order_room,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"order_services"`
 	Requests      []*Request      `gorm:"foreignKey:OrderRoomID;references:ID;constraint:fk_requests_order_room,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"requests"`
 	Notifications []*Notification `gorm:"foreignKey:OrderRoomID;references:ID;constraint:fk_notifications_order_room,OnUpdate:CASCADE,OnDelete:CASCADE" json:"notifications"`
@@ -23,7 +24,6 @@ type OrderRoom struct {
 
 type OrderService struct {
 	ID           int64     `gorm:"type:bigint;primaryKey" json:"id"`
-	Code         string    `gorm:"type:char(10);not null;uniqueIndex:order_services_code_key" json:"code"`
 	OrderRoomID  int64     `gorm:"type:bigint;not null" json:"order_room_id"`
 	ServiceID    int64     `gorm:"type:bigint;not null" json:"service_id"`
 	Quantity     uint32    `gorm:"type:integer;not null" json:"quantity"`

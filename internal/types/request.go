@@ -283,3 +283,9 @@ type WSRequest struct {
 type UpdateReadMessagesRequest struct {
 	ChatID int64 `json:"chat_id"`
 }
+
+type CreateReviewRequest struct {
+	Email   string `json:"email" binding:"required,email"`
+	Star    uint32 `json:"star" binding:"required,min=1,max=5"`
+	Content string `json:"content" binding:"required"`
+}

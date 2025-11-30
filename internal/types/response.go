@@ -232,7 +232,6 @@ type RoomResponse struct {
 
 type SimpleOrderServiceResponse struct {
 	ID           int64                 `json:"id"`
-	Code         string                `json:"code"`
 	Service      *BasicServiceResponse `json:"service"`
 	Quantity     uint32                `json:"quantity"`
 	TotalPrice   float64               `json:"total_price"`
@@ -246,7 +245,6 @@ type SimpleOrderServiceResponse struct {
 
 type BasicOrderServiceResponse struct {
 	ID          int64     `json:"id"`
-	Code        string    `json:"code"`
 	ServiceName string    `json:"service_name"`
 	RoomName    string    `json:"room_name"`
 	Quantity    uint32    `json:"quantity"`
@@ -257,7 +255,6 @@ type BasicOrderServiceResponse struct {
 
 type OrderServiceResponse struct {
 	ID           int64                   `json:"id"`
-	Code         string                  `json:"code"`
 	Service      *BasicServiceResponse   `json:"service"`
 	OrderRoom    *BasicOrderRoomResponse `json:"order_room"`
 	Quantity     uint32                  `json:"quantity"`
@@ -308,7 +305,6 @@ type SimpleRequestTypeResponse struct {
 
 type SimpleRequestResponse struct {
 	ID          int64                      `json:"id"`
-	Code        string                     `json:"code"`
 	RequestType *SimpleRequestTypeResponse `json:"request_type"`
 	Content     string                     `json:"content"`
 	Status      string                     `json:"status"`
@@ -317,7 +313,6 @@ type SimpleRequestResponse struct {
 
 type RequestResponse struct {
 	ID          int64                      `json:"id"`
-	Code        string                     `json:"code"`
 	RequestType *SimpleRequestTypeResponse `json:"request_type"`
 	OrderRoom   *BasicOrderRoomResponse    `json:"order_room"`
 	Content     string                     `json:"content"`
@@ -329,7 +324,6 @@ type RequestResponse struct {
 
 type BasicRequestResponse struct {
 	ID              int64     `json:"id"`
-	Code            string    `json:"code"`
 	RequestTypeName string    `json:"request_type_name"`
 	RoomName        string    `json:"room_name"`
 	Status          string    `json:"status"`
@@ -369,6 +363,7 @@ type SimpleChatWithMessageResponse struct {
 
 type BasicChatResponse struct {
 	ID          int64                     `json:"id"`
+	Code        string                   `json:"code"`
 	Department  *SimpleDepartmentResponse `json:"department"`
 	ExpiredAt   time.Time                 `json:"expired_at"`
 	LastMessage *BasicMessageResponse     `json:"last_message"`
@@ -412,4 +407,11 @@ type UpdateReadMessagesResponse struct {
 	ReaderID   int64     `json:"reader_id"`
 	ReaderType string    `json:"reader_type"`
 	ReadAt     time.Time `json:"read_at"`
+}
+
+type SimpleReviewResponse struct {
+	ID        int64     `json:"id"`
+	Star      uint32    `json:"star"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
 }

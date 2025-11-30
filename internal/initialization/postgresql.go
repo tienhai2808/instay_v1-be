@@ -29,6 +29,7 @@ var allModels = []any{
 	&model.Chat{},
 	&model.Message{},
 	&model.MessageStaff{},
+	&model.Review{},
 }
 
 type DB struct {

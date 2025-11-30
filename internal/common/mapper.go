@@ -546,7 +546,6 @@ func ToSimpleOrderServiceResponse(orderService *model.OrderService) *types.Simpl
 
 	return &types.SimpleOrderServiceResponse{
 		ID:           orderService.ID,
-		Code:         orderService.Code,
 		Service:      ToBasicServiceResponse(orderService.Service),
 		Quantity:     orderService.Quantity,
 		TotalPrice:   orderService.TotalPrice,
@@ -565,7 +564,6 @@ func ToBasicOrderServiceResponse(orderService *model.OrderService) *types.BasicO
 
 	return &types.BasicOrderServiceResponse{
 		ID:          orderService.ID,
-		Code:        orderService.Code,
 		ServiceName: orderService.Service.Name,
 		RoomName:    orderService.OrderRoom.Room.Name,
 		Quantity:    orderService.Quantity,
@@ -606,7 +604,6 @@ func ToOrderServiceResponse(orderService *model.OrderService) *types.OrderServic
 
 	return &types.OrderServiceResponse{
 		ID:           orderService.ID,
-		Code:         orderService.Code,
 		Service:      ToBasicServiceResponse(orderService.Service),
 		OrderRoom:    ToBasicOrderRoomResponse(orderService.OrderRoom),
 		Quantity:     orderService.Quantity,
@@ -753,7 +750,6 @@ func ToSimpleRequestResponse(request *model.Request) *types.SimpleRequestRespons
 
 	return &types.SimpleRequestResponse{
 		ID:          request.ID,
-		Code:        request.Code,
 		Content:     request.Content,
 		RequestType: ToSimpleRequestTypeResponse(request.RequestType),
 		Status:      request.Status,
@@ -805,7 +801,6 @@ func ToRequestResponse(request *model.Request) *types.RequestResponse {
 
 	return &types.RequestResponse{
 		ID:          request.ID,
-		Code:        request.Code,
 		RequestType: ToSimpleRequestTypeResponse(request.RequestType),
 		OrderRoom:   ToBasicOrderRoomResponse(request.OrderRoom),
 		Content:     request.Content,
@@ -823,7 +818,6 @@ func ToBasicRequestResponse(request *model.Request) *types.BasicRequestResponse 
 
 	return &types.BasicRequestResponse{
 		ID:              request.ID,
-		Code:            request.Code,
 		RequestTypeName: request.RequestType.Name,
 		RoomName:        request.OrderRoom.Room.Name,
 		Status:          request.Status,
@@ -896,6 +890,7 @@ func ToBasicChatResponse(chat *model.Chat) *types.BasicChatResponse {
 
 	return &types.BasicChatResponse{
 		ID:          chat.ID,
+		Code:        chat.Code,
 		Department:  ToSimpleDepartmentResponse(chat.Department),
 		ExpiredAt:   chat.ExpiredAt,
 		LastMessage: ToBasicMessageResponse(chat.Messages[0]),
@@ -951,4 +946,17 @@ func ToSimpleChatsResponse(chats []*model.Chat) []*types.SimpleChatResponse {
 	}
 
 	return chatsRes
+}
+
+func ToSimpleReviewResponse(review *model.Review) *types.SimpleReviewResponse {
+	if review == nil {
+		return nil
+	}
+
+	return &types.SimpleReviewResponse{
+		ID:        review.ID,
+		Star:      review.Star,
+		Content:   review.Content,
+		CreatedAt: review.CreatedAt,
+	}
 }
