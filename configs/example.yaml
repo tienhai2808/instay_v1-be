@@ -1,10 +1,10 @@
 server:
   api_prefix: /api/v1
   port: 8080
-  write_timeout: 0
-  read_timeout: 10
+  write_timeout: 10s
+  read_timeout: 10s
   max_header_bytes: 1
-  idle_timeout: 60
+  idle_timeout: 60s
   allow_origins: 
     - http://localhost:3000
   allow_methods:

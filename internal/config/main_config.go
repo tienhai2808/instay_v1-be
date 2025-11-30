@@ -128,6 +128,7 @@ func LoadConfig() (*Config, error) {
 	viper.BindEnv("server.expose_headers", "SV_EXPOSE_HEADERS")
 	viper.BindEnv("server.allow_credentials", "SV_ALLOW_CREDENTIALS")
 	viper.BindEnv("server.max_age", "SV_MAX_AGE")
+	viper.BindEnv("server.max_header_bytes", "SV_MAX_HEADER_BYTES")
 
 	viper.AddConfigPath("./configs")
 	viper.SetConfigName("main")

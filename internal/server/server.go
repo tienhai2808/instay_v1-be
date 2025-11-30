@@ -114,9 +114,9 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		Addr:           addr,
 		Handler:        r,
 		MaxHeaderBytes: cfg.Server.MaxHeaderBytes * 1024 * 1024,
-		IdleTimeout:    cfg.Server.IdleTimeout * time.Second,
-		ReadTimeout:    cfg.Server.ReadTimeout * time.Second,
-		WriteTimeout:   cfg.Server.WriteTimeout * time.Second,
+		IdleTimeout:    cfg.Server.IdleTimeout,
+		ReadTimeout:    cfg.Server.ReadTimeout,
+		WriteTimeout:   cfg.Server.WriteTimeout,
 	}
 
 	return &Server{
