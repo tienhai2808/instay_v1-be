@@ -25,9 +25,9 @@ func (r *bookingRepoImpl) CreateBooking(ctx context.Context, booking *model.Book
 	return r.db.WithContext(ctx).Create(booking).Error
 }
 
-func (r *bookingRepoImpl) FindBookingByIDWithSource(ctx context.Context, bookingID int64) (*model.Booking, error) {
+func (r *bookingRepoImpl) FindBookingByIDWithSourceAndOrderRooms(ctx context.Context, bookingID int64) (*model.Booking, error) {
 	var booking model.Booking
-	if err := r.db.WithContext(ctx).Preload("Source").Where("id = ?", bookingID).First(&booking).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("Source").Preload("OrderRooms.Room.Floor").Preload("OrderRooms.Room.RoomType").Where("id = ?", bookingID).First(&booking).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}

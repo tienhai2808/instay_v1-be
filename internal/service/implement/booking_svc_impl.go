@@ -58,7 +58,7 @@ func (s *bookingSvcImpl) GetBookings(ctx context.Context, query types.BookingPag
 }
 
 func (s *bookingSvcImpl) GetBookingByID(ctx context.Context, id int64) (*model.Booking, error) {
-	booking, err := s.bookingRepo.FindBookingByIDWithSource(ctx, id)
+	booking, err := s.bookingRepo.FindBookingByIDWithSourceAndOrderRooms(ctx, id)
 	if err != nil {
 		s.logger.Error("find booking by id failed", zap.Int64("id", id), zap.Error(err))
 		return nil, err

@@ -183,24 +183,25 @@ type OrderRoomResponse struct {
 }
 
 type BookingResponse struct {
-	ID                 int64     `json:"id"`
-	BookingNumber      string    `json:"booking_number"`
-	GuestFullName      string    `json:"guest_full_name"`
-	GuestEmail         string    `json:"guest_email"`
-	GuestPhone         string    `json:"guest_phone"`
-	CheckIn            time.Time `json:"check_in"`
-	CheckOut           time.Time `json:"check_out"`
-	RoomType           string    `json:"room_type"`
-	RoomNumber         uint32    `json:"room_number"`
-	GuestNumber        string    `json:"guest_number"`
-	BookedOn           time.Time `json:"booked_on"`
-	Source             string    `json:"source"`
-	TotalNetPrice      float64   `json:"total_net_price"`
-	TotalSellPrice     float64   `json:"total_sell_price"`
-	PromotionName      string    `json:"promotion_name"`
-	MealPlan           string    `json:"meal_plan"`
-	BookingPreferences string    `json:"booking_references"`
-	BookingConditions  string    `json:"booking_conditions"`
+	ID                 int64                     `json:"id"`
+	BookingNumber      string                    `json:"booking_number"`
+	GuestFullName      string                    `json:"guest_full_name"`
+	GuestEmail         string                    `json:"guest_email"`
+	GuestPhone         string                    `json:"guest_phone"`
+	CheckIn            time.Time                 `json:"check_in"`
+	CheckOut           time.Time                 `json:"check_out"`
+	RoomType           string                    `json:"room_type"`
+	RoomNumber         uint32                    `json:"room_number"`
+	GuestNumber        string                    `json:"guest_number"`
+	BookedOn           time.Time                 `json:"booked_on"`
+	Source             string                    `json:"source"`
+	TotalNetPrice      float64                   `json:"total_net_price"`
+	TotalSellPrice     float64                   `json:"total_sell_price"`
+	PromotionName      string                    `json:"promotion_name"`
+	MealPlan           string                    `json:"meal_plan"`
+	BookingPreferences string                    `json:"booking_references"`
+	BookingConditions  string                    `json:"booking_conditions"`
+	OrderRooms         []*BasicOrderRoomResponse `json:"order_rooms"`
 }
 
 type SourceResponse struct {

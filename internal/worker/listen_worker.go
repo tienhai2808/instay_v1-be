@@ -408,26 +408,31 @@ func (w *ListenWorker) parseBookingFromHTML(htmlContent string) (*model.Booking,
 func parseDateString(raw string) time.Time {
 	raw = strings.TrimSpace(raw)
 
+	loc, err := time.LoadLocation("Asia/Ho_Chi_Minh")
+	if err != nil {
+		loc = time.FixedZone("ICT", 7*60*60)
+	}
+
 	if strings.Contains(raw, "from") {
 		layoutCheckIn := "Monday, January 2, 2006 from 15:04"
-		if t, err := time.Parse(layoutCheckIn, raw); err == nil {
-			return t
+		if t, err := time.ParseInLocation(layoutCheckIn, raw, loc); err == nil {
+			return t.UTC()
 		}
 	}
 
 	if strings.Contains(raw, "until") {
 		layoutCheckOut := "Monday, January 2, 2006 until 15:04"
-		if t, err := time.Parse(layoutCheckOut, raw); err == nil {
-			return t
+		if t, err := time.ParseInLocation(layoutCheckOut, raw, loc); err == nil {
+			return t.UTC()
 		}
 	}
 
 	layoutDateOnly := "Monday, January 2, 2006"
-	t, err := time.Parse(layoutDateOnly, raw)
-	if err != nil {
-		return time.Time{}
+	if t, err := time.ParseInLocation(layoutDateOnly, raw, loc); err != nil {
+		return t.UTC()
 	}
-	return t
+
+	return time.Time{}
 }
 
 func parsePrice(raw string) float64 {

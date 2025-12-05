@@ -508,6 +508,7 @@ func ToBookingResponse(booking *model.Booking) *types.BookingResponse {
 		MealPlan:           booking.MealPlan,
 		BookingPreferences: booking.BookingPreferences,
 		BookingConditions:  booking.BookingConditions,
+		OrderRooms:         ToBasicOrderRoomsResponse(booking.OrderRooms),
 	}
 }
 
@@ -620,6 +621,19 @@ func ToBasicOrderRoomResponse(orderRoom *model.OrderRoom) *types.BasicOrderRoomR
 		ID:   orderRoom.ID,
 		Room: ToSimpleRoomResponse(orderRoom.Room),
 	}
+}
+
+func ToBasicOrderRoomsResponse(orderRooms []*model.OrderRoom) []*types.BasicOrderRoomResponse {
+	if len(orderRooms) == 0 {
+		return make([]*types.BasicOrderRoomResponse, 0)
+	}
+
+	orderRoomRes := make([]*types.BasicOrderRoomResponse, 0, len(orderRooms))
+	for _, orderRoom := range orderRooms {
+		orderRoomRes = append(orderRoomRes, ToBasicOrderRoomResponse(orderRoom))
+	}
+
+	return orderRoomRes
 }
 
 func ToOrderServiceResponse(orderService *model.OrderService) *types.OrderServiceResponse {

@@ -12,7 +12,7 @@ type BookingRepository interface {
 
 	FindAllBookingsWithSourcePaginated(ctx context.Context, query types.BookingPaginationQuery) ([]*model.Booking, int64, error)
 
-	FindBookingByIDWithSource(ctx context.Context, bookingID int64) (*model.Booking, error)
+	FindBookingByIDWithSourceAndOrderRooms(ctx context.Context, bookingID int64) (*model.Booking, error)
 
 	FindBookingByID(ctx context.Context, bookingID int64) (*model.Booking, error)
 

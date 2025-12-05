@@ -85,7 +85,7 @@ func (s *orderSvcImpl) CreateOrderRoom(ctx context.Context, userID int64, req ty
 	if room == nil {
 		return 0, "", common.ErrRoomNotFound
 	}
-	
+
 	if len(room.OrderRooms) > 0 {
 		return 0, "", common.ErrRoomCurrentlyOccupied
 	}
@@ -105,6 +105,9 @@ func (s *orderSvcImpl) CreateOrderRoom(ctx context.Context, userID int64, req ty
 	}
 
 	if err = s.orderRepo.CreateOrderRoom(ctx, orderRoom); err != nil {
+		if ok, _ := common.IsUniqueViolation(err); ok {
+			return 0, "", common.ErrOrderRoomAlreadyExists
+		}
 		s.logger.Error("create order room failed", zap.Error(err))
 		return 0, "", err
 	}
