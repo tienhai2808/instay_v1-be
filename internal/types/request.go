@@ -300,3 +300,8 @@ type CreateReviewRequest struct {
 	Star    uint32 `json:"star" binding:"required,min=1,max=5"`
 	Content string `json:"content" binding:"required"`
 }
+
+type UpdateReviewRequest struct {
+	Star    *uint32 `json:"star" binding:"omitempty,min=1,max=5"`
+	Content *string `json:"content" binding:"omitempty"`
+}

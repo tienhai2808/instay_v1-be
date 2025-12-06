@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/InstaySystem/is-be/internal/common"
 	"github.com/InstaySystem/is-be/internal/model"
 	"github.com/InstaySystem/is-be/internal/repository"
 	"github.com/InstaySystem/is-be/internal/types"
@@ -34,6 +35,18 @@ func (r *reviewRepoImpl) FindByOrderRoomID(ctx context.Context, orderRoomID int6
 	}
 
 	return &review, nil
+}
+
+func (r *reviewRepoImpl) Update(ctx context.Context, id int64, updateData map[string]any) error {
+	result := r.db.WithContext(ctx).Model(&model.Review{}).Where("id = ?", id).Updates(updateData)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return common.ErrReviewNotFound
+	}
+
+	return nil
 }
 
 func (r *reviewRepoImpl) FindAllPaginated(ctx context.Context, query types.ReviewPaginationQuery) ([]*model.Review, int64, error) {

@@ -13,4 +13,6 @@ type ReviewRepository interface {
 	FindByOrderRoomID(ctx context.Context, orderRoomID int64) (*model.Review, error)
 
 	FindAllPaginated(ctx context.Context, query types.ReviewPaginationQuery) ([]*model.Review, int64, error)
+
+	Update(ctx context.Context, id int64, updateData map[string]any) error
 }

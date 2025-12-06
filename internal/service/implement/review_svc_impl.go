@@ -2,6 +2,7 @@ package implement
 
 import (
 	"context"
+	"errors"
 
 	"github.com/InstaySystem/is-be/internal/common"
 	"github.com/InstaySystem/is-be/internal/model"
@@ -101,4 +102,35 @@ func (s *reviewSvcImpl) GetReviews(ctx context.Context, query types.ReviewPagina
 	}
 
 	return reviews, meta, nil
+}
+
+func (s *reviewSvcImpl) UpdateReview(ctx context.Context, req types.UpdateReviewRequest, orderRoomID int64) error {
+	review, err := s.reviewRepo.FindByOrderRoomID(ctx, orderRoomID)
+	if err != nil {
+		s.logger.Error("find review by order room id failed", zap.Error(err))
+		return err
+	}
+	if review == nil {
+		return common.ErrReviewNotFound
+	}
+
+	updateData := map[string]any{}
+	if review.Content != *req.Content {
+		updateData["content"] = *req.Content
+	}
+	if review.Star != *req.Star {
+		updateData["star"] = *req.Star
+	}
+
+	if len(updateData) > 0 {
+		if err = s.reviewRepo.Update(ctx, review.ID, updateData); err != nil {
+			if errors.Is(err, common.ErrReviewNotFound) {
+				return err
+			}
+			s.logger.Error("update review failed", zap.Error(err))
+			return err
+		}
+	}
+
+	return nil
 }

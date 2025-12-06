@@ -13,4 +13,6 @@ type ReviewService interface {
 	GetMyReview(ctx context.Context, orderRoomID int64) (*model.Review, error)
 
 	GetReviews(ctx context.Context, query types.ReviewPaginationQuery) ([]*model.Review, *types.MetaResponse, error)
+
+	UpdateReview(ctx context.Context, req types.UpdateReviewRequest, orderRoomID int64) error
 }

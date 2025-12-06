@@ -11,10 +11,12 @@ func ReviewRouter(rg *gin.RouterGroup, hdl *handler.ReviewHandler, authMid *midd
 	{
 		admin.GET("", hdl.GetReviews)
 	}
-	guest := rg.Group("/reviews", authMid.IsAuthentication(), authMid.HasGuestToken())
+	guest := rg.Group("/reviews", authMid.HasGuestToken())
 	{
 		guest.POST("", hdl.CreateReview)
 
 		guest.GET("/me", hdl.GetMyReview)
+
+		guest.PATCH("/me", hdl.UpdateMyReview)
 	}
 }
