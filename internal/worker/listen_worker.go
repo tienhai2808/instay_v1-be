@@ -428,7 +428,7 @@ func parseDateString(raw string) time.Time {
 	}
 
 	layoutDateOnly := "Monday, January 2, 2006"
-	if t, err := time.ParseInLocation(layoutDateOnly, raw, loc); err != nil {
+	if t, err := time.ParseInLocation(layoutDateOnly, raw, loc); err == nil {
 		return t.UTC()
 	}
 

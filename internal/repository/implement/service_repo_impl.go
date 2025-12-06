@@ -138,7 +138,7 @@ func (r *serviceRepoImpl) DeleteServiceType(ctx context.Context, serviceTypeID i
 
 func (r *serviceRepoImpl) FindServiceBySlugWithServiceTypeAndServiceImages(ctx context.Context, serviceSlug string) (*model.Service, error) {
 	var service model.Service
-	if err := r.db.WithContext(ctx).Preload("ServiceType").Preload("ServiceImages").Where("slug = ?", serviceSlug).First(&service).Error; err != nil {
+	if err := r.db.WithContext(ctx).Preload("ServiceType").Preload("ServiceImages").Where("slug = ? AND is_active = true", serviceSlug).First(&service).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
