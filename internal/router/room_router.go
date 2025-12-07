@@ -28,8 +28,6 @@ func RoomRouter(rg *gin.RouterGroup, hdl *handler.RoomHandler, authMid *middlewa
 	{
 		admin.GET("/rooms", hdl.GetRooms)
 
-		admin.GET("/rooms/order-rooms", hdl.GetRoomsWithOrderRooms)
-
 		admin.GET("/floors", hdl.GetFloors)
 	}
 

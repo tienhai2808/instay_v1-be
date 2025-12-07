@@ -248,6 +248,7 @@ type RoomResponse struct {
 	UpdatedBy *BasicUserResponse      `json:"updated_by"`
 	RoomType  *SimpleRoomTypeResponse `json:"room_type"`
 	Floor     string                  `json:"floor"`
+	InUse     bool                    `json:"in_use"`
 }
 
 type SimpleOrderServiceResponse struct {

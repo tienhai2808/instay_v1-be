@@ -58,6 +58,7 @@ func ToRoomResponse(room *model.Room) *types.RoomResponse {
 		UpdatedBy: ToBasicUserResponse(room.UpdatedBy),
 		RoomType:  ToSimpleRoomTypeResponse(room.RoomType),
 		Floor:     room.Floor.Name,
+		InUse:     room.InUse,
 	}
 }
 

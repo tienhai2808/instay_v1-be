@@ -1,6 +1,10 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	"github.com/InstaySystem/is-be/internal/model"
+)
 
 type UserData struct {
 	ID         int64           `json:"id"`
@@ -60,6 +64,11 @@ type ServiceCountResult struct {
 type RoomCountResult struct {
 	RoomTypeID int64 `gorm:"column:room_type_id"`
 	RoomCount  int64 `gorm:"column:room_count"`
+}
+
+type RoomInUseResult struct {
+	model.Room
+	InUse bool `gorm:"column:in_use"`
 }
 
 type OrderRoomData struct {

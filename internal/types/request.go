@@ -171,6 +171,7 @@ type RoomPaginationQuery struct {
 	Search     string `form:"search" json:"search"`
 	RoomTypeID int64  `form:"room_type_id" binding:"omitempty" json:"room_type_id"`
 	FloorID    int64  `form:"floor_id" binding:"omitempty" json:"floor_id"`
+	InUse      *bool  `form:"in_use" binding:"omitempty" json:"in_use"`
 }
 
 type CreateRequestTypeRequest struct {

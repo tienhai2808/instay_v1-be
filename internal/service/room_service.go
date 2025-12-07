@@ -27,6 +27,4 @@ type RoomService interface {
 	GetFloors(ctx context.Context) ([]*model.Floor, error)
 
 	GetRooms(ctx context.Context, query types.RoomPaginationQuery) ([]*model.Room, *types.MetaResponse, error)
-
-	GetRoomsWithOrderRooms(ctx context.Context) ([]*model.Room, error)
 }

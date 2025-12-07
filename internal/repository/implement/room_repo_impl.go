@@ -100,29 +100,6 @@ func (r *roomRepoImpl) FindRoomByIDWithActiveOrderRooms(ctx context.Context, roo
 	return &room, nil
 }
 
-func (r *roomRepoImpl) FindRoomsWithActiveOrFutureBookings(ctx context.Context) ([]*model.Room, error) {
-	var rooms []*model.Room
-	now := time.Now()
-
-	if err := r.db.WithContext(ctx).
-		Joins("JOIN order_rooms ON order_rooms.room_id = rooms.id").
-		Joins("JOIN bookings ON bookings.id = order_rooms.booking_id").
-		Where("bookings.check_out >= ?", now).
-		Group("rooms.id").
-		Preload("OrderRooms", func(db *gorm.DB) *gorm.DB {
-			return db.
-				Joins("JOIN bookings ON bookings.id = order_rooms.booking_id").
-				Where("bookings.check_out >= ?", now).
-				Order("bookings.check_in ASC")
-		}).
-		Preload("OrderRooms.Booking").
-		Find(&rooms).Error; err != nil {
-		return nil, err
-	}
-
-	return rooms, nil
-}
-
 func (r *roomRepoImpl) FindFloorByName(ctx context.Context, floorName string) (*model.Floor, error) {
 	var floor model.Floor
 	if err := r.db.WithContext(ctx).Where("name = ?", floorName).First(&floor).Error; err != nil {
@@ -163,20 +140,47 @@ func (r *roomRepoImpl) UpdateRoom(ctx context.Context, roomID int64, updateData 
 }
 
 func (r *roomRepoImpl) FindAllRoomsWithDetailsPaginated(ctx context.Context, query types.RoomPaginationQuery) ([]*model.Room, int64, error) {
-	var rooms []*model.Room
+	var roomsWithInUse []*types.RoomInUseResult
 	var total int64
+	now := time.Now()
 
-	db := r.db.WithContext(ctx).Preload("RoomType").Preload("Floor").Preload("CreatedBy").Preload("UpdatedBy").Model(&model.Room{})
-	db = applyRoomFilters(db, query)
+	db := r.db.WithContext(ctx).
+		Model(&model.Room{}).
+		Preload("RoomType").
+		Preload("Floor").
+		Preload("CreatedBy").
+		Preload("UpdatedBy").
+		Select(`rooms.*, 
+			EXISTS(
+				SELECT 1 
+				FROM order_rooms 
+				INNER JOIN bookings ON bookings.id = order_rooms.booking_id 
+				WHERE order_rooms.room_id = rooms.id 
+				AND bookings.check_in <= ? 
+				AND bookings.check_out > ?
+			) as in_use`,
+			now, now,
+		)
 
-	if err := db.Count(&total).Error; err != nil {
+	db = applyRoomFilters(db, query, now)
+
+	countDB := r.db.WithContext(ctx).Model(&model.Room{})
+	countDB = applyRoomFilters(countDB, query, now)
+	if err := countDB.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	db = applyRoomSorting(db, query)
+
 	offset := (query.Page - 1) * query.Limit
-	if err := db.Offset(int(offset)).Limit(int(query.Limit)).Find(&rooms).Error; err != nil {
+	if err := db.Offset(int(offset)).Limit(int(query.Limit)).Find(&roomsWithInUse).Error; err != nil {
 		return nil, 0, err
+	}
+
+	rooms := make([]*model.Room, len(roomsWithInUse))
+	for i, r := range roomsWithInUse {
+		rooms[i] = &r.Room
+		rooms[i].InUse = r.InUse
 	}
 
 	return rooms, total, nil
@@ -213,7 +217,7 @@ func (r *roomRepoImpl) FindAllRoomTypes(ctx context.Context) ([]*model.RoomType,
 	return roomTypes, nil
 }
 
-func applyRoomFilters(db *gorm.DB, query types.RoomPaginationQuery) *gorm.DB {
+func applyRoomFilters(db *gorm.DB, query types.RoomPaginationQuery, now time.Time) *gorm.DB {
 	if query.Search != "" {
 		searchTerm := "%" + strings.ToLower(query.Search) + "%"
 		db = db.Where(
@@ -228,6 +232,28 @@ func applyRoomFilters(db *gorm.DB, query types.RoomPaginationQuery) *gorm.DB {
 
 	if query.RoomTypeID != 0 {
 		db = db.Where("room_type_id = ?", query.RoomTypeID)
+	}
+
+	if query.InUse != nil {
+		if *query.InUse {
+			db = db.Where(`EXISTS(
+				SELECT 1 
+				FROM order_rooms 
+				INNER JOIN bookings ON bookings.id = order_rooms.booking_id 
+				WHERE order_rooms.room_id = rooms.id 
+				AND bookings.check_in <= ? 
+				AND bookings.check_out > ?
+			)`, now, now)
+		} else {
+			db = db.Where(`NOT EXISTS(
+				SELECT 1 
+				FROM order_rooms 
+				INNER JOIN bookings ON bookings.id = order_rooms.booking_id 
+				WHERE order_rooms.room_id = rooms.id 
+				AND bookings.check_in <= ? 
+				AND bookings.check_out > ?
+			)`, now, now)
+		}
 	}
 
 	return db

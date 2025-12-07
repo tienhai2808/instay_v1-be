@@ -78,6 +78,8 @@ var (
 	ErrBookingNotFound = errors.New("booking not found")
 
 	ErrBookingExpired = errors.New("booking expired")
+	
+	ErrCheckInOutOfRange = errors.New("checkin must be within ±24h of current time")
 
 	ErrOrderServiceNotFound = errors.New("order service not found")
 

@@ -55,7 +55,7 @@ func (h *OrderHandler) CreateOrderRoom(c *gin.Context) {
 		switch err {
 		case common.ErrBookingNotFound, common.ErrRoomNotFound:
 			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrBookingExpired, common.ErrRoomCurrentlyOccupied, common.ErrOrderRoomAlreadyExists:
+		case common.ErrBookingExpired, common.ErrRoomCurrentlyOccupied, common.ErrOrderRoomAlreadyExists, common.ErrCheckInOutOfRange:
 			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
 		default:
 			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)

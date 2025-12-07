@@ -40,4 +40,5 @@ type Room struct {
 	CreatedBy  *User        `gorm:"foreignKey:CreatedByID;references:ID;constraint:fk_room_types_created_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"created_by"`
 	UpdatedBy  *User        `gorm:"foreignKey:UpdatedByID;references:ID;constraint:fk_room_types_updated_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"updated_by"`
 	OrderRooms []*OrderRoom `gorm:"foreignKey:RoomID;references:ID;constraint:fk_order_rooms_room,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"order_rooms"`
+	InUse      bool         `gorm:"-" json:"in_use"`
 }

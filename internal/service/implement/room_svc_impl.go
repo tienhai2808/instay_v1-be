@@ -57,16 +57,6 @@ func (s *roomSvcImpl) CreateRoomType(ctx context.Context, userID int64, req type
 	return nil
 }
 
-func (s *roomSvcImpl) GetRoomsWithOrderRooms(ctx context.Context) ([]*model.Room, error) {
-	rooms, err := s.roomRepo.FindRoomsWithActiveOrFutureBookings(ctx)
-	if err != nil {
-		s.logger.Error("find rooms with active or future bookings failed", zap.Error(err))
-		return nil, err
-	}
-
-	return rooms, nil
-}
-
 func (s *roomSvcImpl) GetRoomTypes(ctx context.Context) ([]*model.RoomType, error) {
 	roomTypes, err := s.roomRepo.FindAllRoomTypesWithDetails(ctx)
 	if err != nil {

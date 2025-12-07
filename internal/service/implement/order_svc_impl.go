@@ -73,8 +73,14 @@ func (s *orderSvcImpl) CreateOrderRoom(ctx context.Context, userID int64, req ty
 		return 0, "", common.ErrBookingNotFound
 	}
 
+	now := time.Now()
 	if booking.CheckOut.Before(time.Now()) {
 		return 0, "", common.ErrBookingExpired
+	}
+	
+	diff := booking.CheckIn.Sub(now)
+	if diff <= -24*time.Hour || diff >= 24*time.Hour {
+		return 0, "", common.ErrCheckInOutOfRange
 	}
 
 	room, err := s.roomRepo.FindRoomByIDWithActiveOrderRooms(ctx, req.RoomID)
