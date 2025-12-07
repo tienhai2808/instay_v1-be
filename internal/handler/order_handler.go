@@ -118,7 +118,7 @@ func (h *OrderHandler) VerifyOrderRoom(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(h.guestName, guestToken, int(ttl.Seconds()), "/", ".asia-east2.run.app", true, true)
+	c.SetCookie(h.guestName, guestToken, int(ttl.Seconds()), "/", "", false, true)
 
 	common.ToAPIResponse(c, http.StatusOK, "Order room verification successful", nil)
 }
