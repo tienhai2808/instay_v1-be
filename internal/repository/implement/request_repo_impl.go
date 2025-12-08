@@ -2,7 +2,6 @@ package implement
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"strings"
 	"time"
@@ -109,21 +108,9 @@ func (r *requestRepoImpl) CreateRequest(ctx context.Context, request *model.Requ
 	return r.db.WithContext(ctx).Create(request).Error
 }
 
-func (r *requestRepoImpl) FindRequestByCodeWithRequestType(ctx context.Context, requestCode string) (*model.Request, error) {
+func (r *requestRepoImpl) FindRequestByIDWithRequestTypeDetailsAndOrderRoomDetailsTx(tx *gorm.DB, requestID int64) (*model.Request, error) {
 	var request model.Request
-	if err := r.db.WithContext(ctx).Preload("RequestType").Where("code = ?", requestCode).First(&request).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return &request, nil
-}
-
-func (r *requestRepoImpl) FindRequestByIDWithRequestTypeDetailsTx(tx *gorm.DB, requestID int64) (*model.Request, error) {
-	var request model.Request
-	if err := tx.Preload("RequestType.Department.Staffs").Where("id = ?", requestID).First(&request).Error; err != nil {
+	if err := tx.Preload("RequestType.Department.Staffs").Preload("OrderRoom.Booking").Where("id = ?", requestID).First(&request).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -184,14 +171,6 @@ func (r *requestRepoImpl) FindAllRequestsWithDetailsPaginated(ctx context.Contex
 }
 
 func applyRequestFilters(db *gorm.DB, query types.RequestPaginationQuery) *gorm.DB {
-	if query.Search != "" {
-		searchTerm := "%" + strings.ToLower(query.Search) + "%"
-		db = db.Where(
-			"LOWER(code) LIKE @q",
-			sql.Named("q", searchTerm),
-		)
-	}
-
 	if query.Status != "" {
 		db = db.Where("status = ?", query.Status)
 	}

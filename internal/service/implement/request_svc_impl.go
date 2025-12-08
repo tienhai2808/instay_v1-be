@@ -249,7 +249,7 @@ func (s *requestSvcImpl) UpdateRequestForGuest(ctx context.Context, orderRoomID,
 	}
 
 	if err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		request, err := s.requestRepo.FindRequestByIDWithRequestTypeDetailsTx(tx, requestID)
+		request, err := s.requestRepo.FindRequestByIDWithRequestTypeDetailsAndOrderRoomDetailsTx(tx, requestID)
 		if err != nil {
 			if strings.Contains(err.Error(), "lock") {
 				return common.ErrLockedRecord
@@ -386,7 +386,7 @@ func (s *requestSvcImpl) GetRequestByID(ctx context.Context, userID, requestID i
 
 func (s *requestSvcImpl) UpdateRequestForAdmin(ctx context.Context, departmentID *int64, userID, requestID int64, status string) error {
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		request, err := s.requestRepo.FindRequestByIDWithRequestTypeDetailsTx(tx, requestID)
+		request, err := s.requestRepo.FindRequestByIDWithRequestTypeDetailsAndOrderRoomDetailsTx(tx, requestID)
 		if err != nil {
 			if strings.Contains(err.Error(), "lock") {
 				return common.ErrLockedRecord
@@ -400,6 +400,10 @@ func (s *requestSvcImpl) UpdateRequestForAdmin(ctx context.Context, departmentID
 
 		if departmentID != nil && request.RequestType.DepartmentID != *departmentID {
 			return common.ErrRequestNotFound
+		}
+
+		if request.OrderRoom.Booking.CheckOut.Before(time.Now()) {
+			return common.ErrBookingExpired 
 		}
 
 		if (request.Status == "pending" && status != "accepted") || (request.Status == "accepted" && status != "done") {

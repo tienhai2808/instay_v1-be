@@ -254,7 +254,6 @@ type OrderServicePaginationQuery struct {
 	Filter string `form:"filter" binding:"omitempty" json:"filter"`
 	From   string `form:"from"   binding:"omitempty,datetime=2006-01-02" json:"from"`
 	To     string `form:"to"     binding:"omitempty,datetime=2006-01-02" json:"to"`
-	Search string `form:"search" json:"search"`
 	Status string `form:"status" binding:"omitempty,oneof=accepted pending rejected cancelled" json:"status"`
 }
 
@@ -276,7 +275,6 @@ type RequestPaginationQuery struct {
 	Filter string `form:"filter" binding:"omitempty" json:"filter"`
 	From   string `form:"from"   binding:"omitempty,datetime=2006-01-02" json:"from"`
 	To     string `form:"to"     binding:"omitempty,datetime=2006-01-02" json:"to"`
-	Search string `form:"search" json:"search"`
 	Status string `form:"status" binding:"omitempty,oneof=accepted pending rejected cancelled" json:"status"`
 }
 

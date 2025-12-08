@@ -27,9 +27,7 @@ type RequestRepository interface {
 
 	RequestStatusDistribution(ctx context.Context) ([]*types.StatusChartResponse, error)
 
-	FindRequestByCodeWithRequestType(ctx context.Context, requestCode string) (*model.Request, error)
-
-	FindRequestByIDWithRequestTypeDetailsTx(tx *gorm.DB, requestID int64) (*model.Request, error)
+	FindRequestByIDWithRequestTypeDetailsAndOrderRoomDetailsTx(tx *gorm.DB, requestID int64) (*model.Request, error)
 
 	UpdateRequestTx(tx *gorm.DB, requestID int64, updateData map[string]any) error
 

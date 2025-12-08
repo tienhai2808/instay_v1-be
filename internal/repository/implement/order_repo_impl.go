@@ -2,7 +2,6 @@ package implement
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"strings"
 	"time"
@@ -88,12 +87,12 @@ func (r *orderRepoImpl) FindOrderRoomByIDWithDetails(ctx context.Context, orderR
 	return &orderRoom, nil
 }
 
-func (r *orderRepoImpl) FindOrderServiceByIDWithServiceDetailsTx(tx *gorm.DB, orderServiceID int64) (*model.OrderService, error) {
+func (r *orderRepoImpl) FindOrderServiceByIDWithServiceDetailsAndOrderRoomDetailsTx(tx *gorm.DB, orderServiceID int64) (*model.OrderService, error) {
 	var orderService model.OrderService
 	if err := tx.Clauses(clause.Locking{
 		Strength: clause.LockingStrengthUpdate,
 		Options:  clause.LockingOptionsNoWait,
-	}).Preload("Service.ServiceType.Department.Staffs").Where("id = ?", orderServiceID).First(&orderService).Error; err != nil {
+	}).Preload("Service.ServiceType.Department.Staffs").Preload("OrderRoom.Booking").Where("id = ?", orderServiceID).First(&orderService).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -168,14 +167,6 @@ func applyOrderServiceSorting(db *gorm.DB, query types.OrderServicePaginationQue
 }
 
 func applyOrderServiceFilters(db *gorm.DB, query types.OrderServicePaginationQuery) *gorm.DB {
-	if query.Search != "" {
-		searchTerm := "%" + strings.ToLower(query.Search) + "%"
-		db = db.Where(
-			"LOWER(code) LIKE @q",
-			sql.Named("q", searchTerm),
-		)
-	}
-
 	if query.Status != "" {
 		db = db.Where("status = ?", query.Status)
 	}

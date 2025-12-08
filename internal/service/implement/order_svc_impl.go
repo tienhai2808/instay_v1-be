@@ -324,7 +324,7 @@ func (s *orderSvcImpl) UpdateOrderServiceForGuest(ctx context.Context, orderRoom
 	}
 
 	if err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		orderService, err := s.orderRepo.FindOrderServiceByIDWithServiceDetailsTx(tx, orderServiceID)
+		orderService, err := s.orderRepo.FindOrderServiceByIDWithServiceDetailsAndOrderRoomDetailsTx(tx, orderServiceID)
 		if err != nil {
 			if strings.Contains(err.Error(), "lock") {
 				return common.ErrLockedRecord
@@ -433,7 +433,7 @@ func (s *orderSvcImpl) GetOrderServicesForAdmin(ctx context.Context, query types
 
 func (s *orderSvcImpl) UpdateOrderServiceForAdmin(ctx context.Context, departmentID *int64, userID, orderServiceID int64, req types.UpdateOrderServiceRequest) error {
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		orderService, err := s.orderRepo.FindOrderServiceByIDWithServiceDetailsTx(tx, orderServiceID)
+		orderService, err := s.orderRepo.FindOrderServiceByIDWithServiceDetailsAndOrderRoomDetailsTx(tx, orderServiceID)
 		if err != nil {
 			if strings.Contains(err.Error(), "lock") {
 				return common.ErrLockedRecord
@@ -447,6 +447,10 @@ func (s *orderSvcImpl) UpdateOrderServiceForAdmin(ctx context.Context, departmen
 
 		if departmentID != nil && orderService.Service.ServiceType.DepartmentID != *departmentID {
 			return common.ErrOrderServiceNotFound
+		}
+
+		if orderService.OrderRoom.Booking.CheckOut.Before(time.Now()) {
+			return common.ErrBookingExpired
 		}
 
 		if orderService.Status != "pending" || !slices.Contains([]string{"rejected", "accepted"}, req.Status) {

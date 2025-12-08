@@ -384,7 +384,7 @@ func (h *RequestHandler) UpdateRequestForAdmin(c *gin.Context) {
 		switch err {
 		case common.ErrRequestNotFound:
 			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrInvalidStatus:
+		case common.ErrInvalidStatus, common.ErrBookingExpired:
 			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
 		default:
 			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)

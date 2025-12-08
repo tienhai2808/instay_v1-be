@@ -21,7 +21,7 @@ type OrderRepository interface {
 
 	FindOrderRoomByIDWithDetails(ctx context.Context, orderRoomID int64) (*model.OrderRoom, error)
 
-	FindOrderServiceByIDWithServiceDetailsTx(tx *gorm.DB, orderServiceID int64) (*model.OrderService, error)
+	FindOrderServiceByIDWithServiceDetailsAndOrderRoomDetailsTx(tx *gorm.DB, orderServiceID int64) (*model.OrderService, error)
 
 	UpdateOrderServiceTx(tx *gorm.DB, orderServiceID int64, updateData map[string]any) error
 
