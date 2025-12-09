@@ -25,13 +25,13 @@ func (h *NotificationHandler) GetNotificationsForAdmin(c *gin.Context) {
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -52,7 +52,7 @@ func (h *NotificationHandler) GetNotificationsForAdmin(c *gin.Context) {
 
 	notifications, meta, err := h.notificationSvc.GetNotificationsForAdmin(ctx, query, user.ID, user.Department.ID)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -68,13 +68,13 @@ func (h *NotificationHandler) CountUnreadNotificationsForAdmin(c *gin.Context) {
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -87,7 +87,7 @@ func (h *NotificationHandler) CountUnreadNotificationsForAdmin(c *gin.Context) {
 
 	count, err := h.notificationSvc.CountUnreadNotificationsForAdmin(ctx, user.ID, user.Department.ID)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -102,13 +102,13 @@ func (h *NotificationHandler) GetNotificationsForGuest(c *gin.Context) {
 
 	orderRoomID := c.GetInt64("order_room_id")
 	if orderRoomID == 0 {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 
 	notifications, err := h.notificationSvc.GetNotificationsForGuest(ctx, orderRoomID)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -123,13 +123,13 @@ func (h *NotificationHandler) CountUnreadNotificationsForGuest(c *gin.Context) {
 
 	orderRoomID := c.GetInt64("order_room_id")
 	if orderRoomID == 0 {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 
 	count, err := h.notificationSvc.CountUnreadNotificationsForGuest(ctx, orderRoomID)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 

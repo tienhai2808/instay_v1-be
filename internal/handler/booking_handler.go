@@ -33,7 +33,7 @@ func (h *BookingHandler) GetBookings(c *gin.Context) {
 
 	bookings, meta, err := h.bookingSvc.GetBookings(ctx, query)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -50,18 +50,14 @@ func (h *BookingHandler) GetBookingByID(c *gin.Context) {
 	bookingIDStr := c.Param("id")
 	bookingID, err := strconv.ParseInt(bookingIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	booking, err := h.bookingSvc.GetBookingByID(ctx, bookingID)
 	if err != nil {
-		switch err {
-		case common.ErrBookingNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
+		return
 	}
 
 	common.ToAPIResponse(c, http.StatusOK, "Get booking information successfully", gin.H{
@@ -75,7 +71,7 @@ func (h *BookingHandler) GetSources(c *gin.Context) {
 
 	sources, err := h.bookingSvc.GetSources(ctx)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 

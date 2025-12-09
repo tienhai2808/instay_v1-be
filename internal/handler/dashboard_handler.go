@@ -24,7 +24,7 @@ func (h *DashboardHandler) Overview(c *gin.Context) {
 
 	data, err := h.dashboardSvc.Overview(ctx)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 

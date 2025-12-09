@@ -15,8 +15,6 @@ type BookingRepository interface {
 
 	FindBookingByIDWithSourceAndOrderRooms(ctx context.Context, bookingID int64) (*model.Booking, error)
 
-	FindBookingByID(ctx context.Context, bookingID int64) (*model.Booking, error)
-
 	FindSourceByName(ctx context.Context, sourceName string) (*model.Source, error)
 
 	GetBookingCountBySource(ctx context.Context) ([]*types.ChartData, error)

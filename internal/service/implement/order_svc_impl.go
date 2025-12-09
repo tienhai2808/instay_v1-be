@@ -64,7 +64,7 @@ func NewOrderService(
 }
 
 func (s *orderSvcImpl) CreateOrderRoom(ctx context.Context, userID int64, req types.CreateOrderRoomRequest) (int64, string, error) {
-	booking, err := s.bookingRepo.FindBookingByID(ctx, req.BookingID)
+	booking, err := s.bookingRepo.FindBookingByIDWithSourceAndOrderRooms(ctx, req.BookingID)
 	if err != nil {
 		s.logger.Error("find booking by id failed", zap.Int64("id", req.BookingID), zap.Error(err))
 		return 0, "", err
@@ -81,6 +81,10 @@ func (s *orderSvcImpl) CreateOrderRoom(ctx context.Context, userID int64, req ty
 	diff := booking.CheckIn.Sub(now)
 	if diff <= -24*time.Hour || diff >= 24*time.Hour {
 		return 0, "", common.ErrCheckInOutOfRange
+	}
+
+	if len(booking.OrderRooms) >= int(booking.RoomNumber) {
+		return 0, "", common.ErrMaxRoomReached
 	}
 
 	room, err := s.roomRepo.FindRoomByIDWithActiveOrderRooms(ctx, req.RoomID)

@@ -47,10 +47,9 @@ func NewDashboardService(
 
 func (s *dashboardSvcImpl) Overview(ctx context.Context) (*types.DashboardResponse, error) {
 	res := &types.DashboardResponse{
-		OrderServiceStats: make([]*types.StatusChartResponse, 0),
-		RequestStats:      make([]*types.StatusChartResponse, 0),
-		DailyBookingStats: make([]*types.DailyBookingChartResponse, 0),
-		// Các mảng mới
+		OrderServiceStats:    make([]*types.StatusChartResponse, 0),
+		RequestStats:         make([]*types.StatusChartResponse, 0),
+		DailyBookingStats:    make([]*types.DailyBookingChartResponse, 0),
 		BookingSourceStats:   make([]*types.ChartData, 0),
 		ServiceUsageStats:    make([]*types.ChartData, 0),
 		PopularRoomTypeStats: make([]*types.PopularRoomTypeChartData, 0),
@@ -96,11 +95,18 @@ func (s *dashboardSvcImpl) Overview(ctx context.Context) (*types.DashboardRespon
 	})
 
 	g.Go(func() error {
-		count, err := s.roomRepo.CountRoom(ctx)
+		total, err := s.roomRepo.CountRoom(ctx)
 		if err != nil {
 			return err
 		}
-		res.TotalRooms = count
+
+		occupied, err := s.roomRepo.CountOccupancyRoom(ctx)
+		if err != nil {
+			return err
+		}
+
+		res.TotalRooms = total
+		res.OccupiedRooms = occupied
 		return nil
 	})
 

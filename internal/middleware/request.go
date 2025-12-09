@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
+	"github.com/InstaySystem/is-be/internal/common"
 	"github.com/InstaySystem/is-be/internal/types"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -43,4 +44,22 @@ func (m *RequestMiddleware) Recovery() gin.HandlerFunc {
 			Message: "internal server error",
 		})
 	})
+}
+
+func (m *RequestMiddleware) ErrorHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+
+		err := c.Errors.Last()
+		if err == nil {
+			return
+		}
+
+		if apiErr, ok := err.Err.(*common.APIError); ok {
+			common.ToAPIResponse(c, apiErr.Status, apiErr.Message, nil)
+			return
+		}
+
+		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+	}
 }

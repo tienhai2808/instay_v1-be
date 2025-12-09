@@ -26,13 +26,13 @@ func (h *RoomHandler) CreateRoomType(c *gin.Context) {
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -44,12 +44,7 @@ func (h *RoomHandler) CreateRoomType(c *gin.Context) {
 	}
 
 	if err := h.roomSvc.CreateRoomType(ctx, user.ID, req); err != nil {
-		switch err {
-		case common.ErrRoomTypeAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -62,7 +57,7 @@ func (h *RoomHandler) GetRoomTypes(c *gin.Context) {
 
 	roomTypes, err := h.roomSvc.GetRoomTypes(ctx)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -77,7 +72,7 @@ func (h *RoomHandler) GetSimpleRoomTypes(c *gin.Context) {
 
 	roomTypes, err := h.roomSvc.GetSimpleRoomTypes(ctx)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -93,19 +88,19 @@ func (h *RoomHandler) UpdateRoomType(c *gin.Context) {
 	roomTypeIDStr := c.Param("id")
 	roomTypeID, err := strconv.ParseInt(roomTypeIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -117,14 +112,7 @@ func (h *RoomHandler) UpdateRoomType(c *gin.Context) {
 	}
 
 	if err = h.roomSvc.UpdateRoomType(ctx, roomTypeID, user.ID, req); err != nil {
-		switch err {
-		case common.ErrRoomTypeAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		case common.ErrRoomTypeNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -138,19 +126,12 @@ func (h *RoomHandler) DeleteRoomType(c *gin.Context) {
 	roomTypeIDStr := c.Param("id")
 	roomTypeID, err := strconv.ParseInt(roomTypeIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	if err = h.roomSvc.DeleteRoomType(ctx, roomTypeID); err != nil {
-		switch err {
-		case common.ErrRoomTypeNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrProtectedRecord:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -163,13 +144,13 @@ func (h *RoomHandler) CreateRoom(c *gin.Context) {
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -181,14 +162,7 @@ func (h *RoomHandler) CreateRoom(c *gin.Context) {
 	}
 
 	if err := h.roomSvc.CreateRoom(ctx, user.ID, req); err != nil {
-		switch err {
-		case common.ErrRoomAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		case common.ErrRoomTypeNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -208,7 +182,7 @@ func (h *RoomHandler) GetRooms(c *gin.Context) {
 
 	rooms, meta, err := h.roomSvc.GetRooms(ctx, query)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -225,19 +199,19 @@ func (h *RoomHandler) UpdateRoom(c *gin.Context) {
 	roomIDStr := c.Param("id")
 	roomID, err := strconv.ParseInt(roomIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -249,14 +223,7 @@ func (h *RoomHandler) UpdateRoom(c *gin.Context) {
 	}
 
 	if err = h.roomSvc.UpdateRoom(ctx, roomID, user.ID, req); err != nil {
-		switch err {
-		case common.ErrRoomTypeNotFound, common.ErrRoomNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrRoomAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -270,19 +237,12 @@ func (h *RoomHandler) DeleteRoom(c *gin.Context) {
 	roomIDStr := c.Param("id")
 	roomID, err := strconv.ParseInt(roomIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	if err = h.roomSvc.DeleteRoom(ctx, roomID); err != nil {
-		switch err {
-		case common.ErrRoomNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrProtectedRecord:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 }
@@ -293,7 +253,7 @@ func (h *RoomHandler) GetFloors(c *gin.Context) {
 
 	floors, err := h.roomSvc.GetFloors(ctx)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 

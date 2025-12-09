@@ -50,20 +50,13 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		req.DepartmentID = nil
 	}
 	if req.DepartmentID == nil && req.Role == "staff" {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrDepartmentRequired.Error(), nil)
+		c.Error(common.ErrDepartmentRequired)
 		return
 	}
 
 	id, err := h.userSvc.CreateUser(ctx, req)
 	if err != nil {
-		switch err {
-		case common.ErrEmailAlreadyExists, common.ErrUsernameAlreadyExists, common.ErrPhoneAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		case common.ErrDepartmentNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -93,18 +86,13 @@ func (h *UserHandler) GetUserByID(c *gin.Context) {
 	userIDStr := c.Param("id")
 	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	user, err := h.userSvc.GetUserByID(ctx, userID)
 	if err != nil {
-		switch err {
-		case common.ErrUserNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -139,13 +127,13 @@ func (h *UserHandler) GetUsers(c *gin.Context) {
 
 	users, meta, err := h.userSvc.GetUsers(ctx, query)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
 	common.ToAPIResponse(c, http.StatusOK, "Get user list successfully", gin.H{
 		"users": common.ToSimpleUsersResponse(users),
-		"meta": meta,
+		"meta":  meta,
 	})
 }
 
@@ -194,7 +182,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	userIDStr := c.Param("id")
 	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
@@ -206,16 +194,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 	}
 
 	if err := h.userSvc.UpdateUser(ctx, userID, req); err != nil {
-		switch err {
-		case common.ErrEmailAlreadyExists, common.ErrUsernameAlreadyExists, common.ErrPhoneAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		case common.ErrUserNotFound, common.ErrDepartmentNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrNeedAdmin, common.ErrDepartmentRequired:
-			common.ToAPIResponse(c, http.StatusBadRequest, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -244,7 +223,7 @@ func (h *UserHandler) UpdateUserPassword(c *gin.Context) {
 	userIDStr := c.Param("id")
 	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
@@ -256,12 +235,7 @@ func (h *UserHandler) UpdateUserPassword(c *gin.Context) {
 	}
 
 	if err = h.userSvc.UpdateUserPassword(ctx, userID, req); err != nil {
-		switch err {
-		case common.ErrUserNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -289,19 +263,12 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 	userIDStr := c.Param("id")
 	userID, err := strconv.ParseInt(userIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	if err := h.userSvc.DeleteUser(ctx, userID); err != nil {
-		switch err {
-		case common.ErrUserNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrProtectedRecord:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 

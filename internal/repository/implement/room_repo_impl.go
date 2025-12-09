@@ -201,11 +201,21 @@ func (r *roomRepoImpl) DeleteRoom(ctx context.Context, roomID int64) error {
 
 func (r *roomRepoImpl) CountRoom(ctx context.Context) (int64, error) {
 	var count int64
-	if err := r.db.WithContext(ctx).Model(&model.Room{}).Count(&count).Error; err != nil {
-		return 0, err
-	}
+	err := r.db.WithContext(ctx).Model(&model.Room{}).Count(&count).Error
 
-	return count, nil
+	return count, err
+}
+
+func (r *roomRepoImpl) CountOccupancyRoom(ctx context.Context) (int64, error) {
+	var count int64
+	now := time.Now()
+	err := r.db.WithContext(ctx).
+		Model(&model.OrderRoom{}).
+		Joins("JOIN bookings ON bookings.id = order_rooms.booking_id").
+		Where("bookings.check_in <= ? AND bookings.check_out > ?", now, now).
+		Distinct("room_id").
+		Count(&count).Error
+	return count, err
 }
 
 func (r *roomRepoImpl) FindAllFloors(ctx context.Context) ([]*model.Floor, error) {
@@ -241,6 +251,11 @@ func applyRoomFilters(db *gorm.DB, query types.RoomPaginationQuery, now time.Tim
 
 	if query.RoomTypeID != 0 {
 		db = db.Where("room_type_id = ?", query.RoomTypeID)
+	}
+
+	if query.RoomTypeName != "" {
+		name := "%" + strings.ToLower(query.RoomTypeName) + "%"
+		db = db.Joins("JOIN room_types rt ON rt.id = rooms.room_type_id").Where("LOWER(rt.name) LIKE ?", name)
 	}
 
 	if query.InUse != nil {

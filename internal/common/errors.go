@@ -1,95 +1,109 @@
 package common
 
-import "errors"
+import "net/http"
 
 var (
-	ErrUsernameAlreadyExists = errors.New("username already exists")
+	ErrUsernameAlreadyExists = NewAPIError(http.StatusConflict, "username already exists")
 
-	ErrEmailAlreadyExists = errors.New("email already exists")
+	ErrEmailAlreadyExists = NewAPIError(http.StatusConflict, "email already exists")
 
-	ErrPhoneAlreadyExists = errors.New("phone number already exists")
+	ErrPhoneAlreadyExists = NewAPIError(http.StatusConflict, "phone number already exists")
 
-	ErrChatAlreadyExists = errors.New("chat already exists")
+	ErrChatAlreadyExists = NewAPIError(http.StatusConflict, "chat already exists")
 
-	ErrUserNotFound = errors.New("user not found")
+	ErrUserNotFound = NewAPIError(http.StatusNotFound, "user not found")
 
-	ErrLoginFailed = errors.New("incorrect username or password")
+	ErrLoginFailed = NewAPIError(http.StatusBadRequest, "incorrect username or password")
 
-	ErrInvalidToken = errors.New("invalid or expired token")
+	ErrInvalidToken = NewAPIError(http.StatusBadRequest, "invalid or expired token")
 
-	ErrUnAuth = errors.New("unauthorized")
+	ErrUnAuth = NewAPIError(http.StatusUnauthorized, "unauthorized")
 
-	ErrInvalidUser = errors.New("invalid user")
+	ErrInvalidUser = NewAPIError(http.StatusForbidden, "invalid user")
 
-	ErrForbidden = errors.New("forbidden")
+	ErrForbidden = NewAPIError(http.StatusForbidden, "forbidden")
 
-	ErrIncorrectPassword = errors.New("incorrect password")
+	ErrIncorrectPassword = NewAPIError(http.StatusBadRequest, "incorrect password")
 
-	ErrTooManyAttempts = errors.New("too many attempts")
+	ErrTooManyAttempts = NewAPIError(http.StatusTooManyRequests, "too many attempts")
 
-	ErrInvalidOTP = errors.New("invalid or expired OTP")
+	ErrInvalidOTP = NewAPIError(http.StatusBadRequest, "invalid or expired OTP")
 
-	ErrInvalidID = errors.New("invalid ID")
+	ErrInvalidID = NewAPIError(http.StatusBadRequest, "invalid ID")
 
-	ErrProtectedRecord = errors.New("record related to other records, cannot be deleted")
+	ErrProtectedRecord = NewAPIError(http.StatusConflict, "record related to other records, cannot be deleted")
 
-	ErrLockedRecord = errors.New("the record is being updated")
+	ErrLockedRecord = NewAPIError(http.StatusConflict, "the record is being updated")
 
-	ErrNeedAdmin = errors.New("need 1 active administrator")
+	ErrNeedAdmin = NewAPIError(http.StatusBadRequest, "need 1 active administrator")
 
-	ErrDepartmentAlreadyExists = errors.New("department already exists")
+	ErrDepartmentAlreadyExists = NewAPIError(http.StatusConflict, "department already exists")
 
-	ErrDepartmentNotFound = errors.New("department not found")
+	ErrDepartmentNotFound = NewAPIError(http.StatusNotFound, "department not found")
 
-	ErrDepartmentRequired = errors.New("departmentid is require")
+	ErrDepartmentRequired = NewAPIError(http.StatusBadRequest, "departmentid is require")
 
-	ErrServiceTypeAlreadyExists = errors.New("service type already exists")
+	ErrServiceTypeAlreadyExists = NewAPIError(http.StatusConflict, "service type already exists")
 
-	ErrServiceTypeNotFound = errors.New("service type not found")
+	ErrServiceTypeNotFound = NewAPIError(http.StatusNotFound, "service type not found")
 
-	ErrRequestTypeNotFound = errors.New("request type not found")
+	ErrRequestTypeNotFound = NewAPIError(http.StatusNotFound, "request type not found")
 
-	ErrRequestNotFound = errors.New("request not found")
+	ErrRequestNotFound = NewAPIError(http.StatusNotFound, "request not found")
 
-	ErrServiceAlreadyExists = errors.New("service already exists")
+	ErrServiceAlreadyExists = NewAPIError(http.StatusConflict, "service already exists")
 
-	ErrServiceNotFound = errors.New("service not found")
+	ErrServiceNotFound = NewAPIError(http.StatusNotFound, "service not found")
 
-	ErrInvalidQuery = errors.New("invalid query")
+	ErrHasServiceImageNotFound = NewAPIError(http.StatusNotFound, "has service image not found")
 
-	ErrFileNotFound = errors.New("file not found")
+	ErrRequestTypeAlreadyExists = NewAPIError(http.StatusConflict, "request type already exists")
 
-	ErrHasServiceImageNotFound = errors.New("has service image not found")
+	ErrRoomTypeAlreadyExists = NewAPIError(http.StatusConflict, "room type already exists")
 
-	ErrRequestTypeAlreadyExists = errors.New("request type already exists")
+	ErrRoomAlreadyExists = NewAPIError(http.StatusConflict, "room already exists")
 
-	ErrRoomTypeAlreadyExists = errors.New("room type already exists")
+	ErrRoomTypeNotFound = NewAPIError(http.StatusNotFound, "room type not found")
 
-	ErrRoomAlreadyExists = errors.New("room already exists")
+	ErrRoomNotFound = NewAPIError(http.StatusNotFound, "room not found")
 
-	ErrRoomTypeNotFound = errors.New("room type not found")
+	ErrOrderRoomNotFound = NewAPIError(http.StatusNotFound, "order room not found")
 
-	ErrRoomNotFound = errors.New("room not found")
+	ErrOrderRoomAlreadyExists = NewAPIError(http.StatusConflict, "order room already exists")
 
-	ErrOrderRoomNotFound = errors.New("order room not found")
+	ErrBookingNotFound = NewAPIError(http.StatusNotFound, "booking not found")
 
-	ErrOrderRoomAlreadyExists = errors.New("order room already exists")
+	ErrBookingExpired = NewAPIError(http.StatusConflict, "booking expired")
 
-	ErrBookingNotFound = errors.New("booking not found")
+	ErrCheckInOutOfRange = NewAPIError(http.StatusConflict, "checkin must be within ±24h of current time")
 
-	ErrBookingExpired = errors.New("booking expired")
-	
-	ErrCheckInOutOfRange = errors.New("checkin must be within ±24h of current time")
+	ErrMaxRoomReached = NewAPIError(http.StatusConflict, "max room reached")
 
-	ErrOrderServiceNotFound = errors.New("order service not found")
+	ErrOrderServiceNotFound = NewAPIError(http.StatusNotFound, "order service not found")
 
-	ErrChatNotFound = errors.New("chat not found")
+	ErrChatNotFound = NewAPIError(http.StatusNotFound, "chat not found")
 
-	ErrInvalidStatus = errors.New("invalid status")
+	ErrInvalidStatus = NewAPIError(http.StatusConflict, "invalid status")
 
-	ErrOrderRoomReviewed = errors.New("order room reviewed")
+	ErrOrderRoomReviewed = NewAPIError(http.StatusConflict, "order room reviewed")
 
-	ErrReviewNotFound = errors.New("review not found")
+	ErrReviewNotFound = NewAPIError(http.StatusNotFound, "review not found")
 
-	ErrRoomCurrentlyOccupied = errors.New("room currently occupied")
+	ErrRoomCurrentlyOccupied = NewAPIError(http.StatusConflict, "room currently occupied")
 )
+
+type APIError struct {
+	Status  int
+	Message string
+}
+
+func NewAPIError(status int, message string) *APIError {
+	return &APIError{
+		status,
+		message,
+	}
+}
+
+func (e *APIError) Error() string {
+	return e.Message
+}

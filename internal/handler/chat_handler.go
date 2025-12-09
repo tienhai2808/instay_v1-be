@@ -26,13 +26,13 @@ func (h *ChatHandler) GetChatsForAdmin(c *gin.Context) {
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -53,7 +53,7 @@ func (h *ChatHandler) GetChatsForAdmin(c *gin.Context) {
 
 	chats, meta, err := h.chatSvc.GetChatsForAdmin(ctx, query, user.ID, user.Department.ID)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -70,30 +70,25 @@ func (h *ChatHandler) GetChatByID(c *gin.Context) {
 	chatIDStr := c.Param("id")
 	chatID, err := strconv.ParseInt(chatIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
 	chat, err := h.chatSvc.GetChatByID(ctx, chatID, user.ID, user.Department.ID)
 	if err != nil {
-		switch err {
-		case common.ErrChatNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -108,13 +103,13 @@ func (h *ChatHandler) GetChatsForGuest(c *gin.Context) {
 
 	orderRoomID := c.GetInt64("order_room_id")
 	if orderRoomID == 0 {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 
 	chats, err := h.chatSvc.GetChatsForGuest(ctx, orderRoomID)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -131,18 +126,13 @@ func (h *ChatHandler) GetChatByCode(c *gin.Context) {
 
 	orderRoomID := c.GetInt64("order_room_id")
 	if orderRoomID == 0 {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 
 	chat, err := h.chatSvc.GetChatByCode(ctx, chatCode, orderRoomID)
 	if err != nil {
-		switch err {
-		case common.ErrChatNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 

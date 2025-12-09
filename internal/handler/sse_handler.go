@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/InstaySystem/is-be/internal/common"
@@ -35,7 +34,7 @@ func (h *SSEHandler) ServeSSE(c *gin.Context) {
 	clientType := c.GetString("client_type")
 	departmentID := c.GetInt64("department_id")
 	if clientID == 0 && clientType == "" {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 

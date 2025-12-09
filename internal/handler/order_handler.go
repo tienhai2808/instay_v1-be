@@ -33,13 +33,13 @@ func (h *OrderHandler) CreateOrderRoom(c *gin.Context) {
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -52,14 +52,7 @@ func (h *OrderHandler) CreateOrderRoom(c *gin.Context) {
 
 	id, secretCode, err := h.orderSvc.CreateOrderRoom(ctx, user.ID, req)
 	if err != nil {
-		switch err {
-		case common.ErrBookingNotFound, common.ErrRoomNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrBookingExpired, common.ErrRoomCurrentlyOccupied, common.ErrOrderRoomAlreadyExists, common.ErrCheckInOutOfRange:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -76,18 +69,13 @@ func (h *OrderHandler) GetOrderRoomByID(c *gin.Context) {
 	orderRoomIDStr := c.Param("id")
 	orderRoomID, err := strconv.ParseInt(orderRoomIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	orderRoom, err := h.orderSvc.GetOrderRoomByID(ctx, orderRoomID)
 	if err != nil {
-		switch err {
-		case common.ErrRoomNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -109,12 +97,7 @@ func (h *OrderHandler) VerifyOrderRoom(c *gin.Context) {
 
 	guestToken, ttl, err := h.orderSvc.VerifyOrderRoom(ctx, req.SecretCode)
 	if err != nil {
-		switch err {
-		case common.ErrInvalidToken:
-			common.ToAPIResponse(c, http.StatusBadRequest, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -129,7 +112,7 @@ func (h *OrderHandler) CreateOrderService(c *gin.Context) {
 
 	orderRoomID := c.GetInt64("order_room_id")
 	if orderRoomID == 0 {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 
@@ -142,14 +125,7 @@ func (h *OrderHandler) CreateOrderService(c *gin.Context) {
 
 	id, err := h.orderSvc.CreateOrderService(ctx, orderRoomID, req)
 	if err != nil {
-		switch err {
-		case common.ErrServiceNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrOrderRoomNotFound:
-			common.ToAPIResponse(c, http.StatusForbidden, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -165,13 +141,13 @@ func (h *OrderHandler) UpdateOrderServiceForGuest(c *gin.Context) {
 	orderServiceIDStr := c.Param("id")
 	orderServiceID, err := strconv.ParseInt(orderServiceIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	orderRoomID := c.GetInt64("order_room_id")
 	if orderRoomID == 0 {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 
@@ -183,16 +159,7 @@ func (h *OrderHandler) UpdateOrderServiceForGuest(c *gin.Context) {
 	}
 
 	if err = h.orderSvc.UpdateOrderServiceForGuest(ctx, orderRoomID, orderServiceID, req); err != nil {
-		switch err {
-		case common.ErrOrderServiceNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrOrderRoomNotFound:
-			common.ToAPIResponse(c, http.StatusForbidden, err.Error(), nil)
-		case common.ErrInvalidStatus:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -205,13 +172,13 @@ func (h *OrderHandler) GetOrderServicesForAdmin(c *gin.Context) {
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -231,7 +198,7 @@ func (h *OrderHandler) GetOrderServicesForAdmin(c *gin.Context) {
 
 	orderServices, meta, err := h.orderSvc.GetOrderServicesForAdmin(ctx, query, departmentID)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -248,19 +215,19 @@ func (h *OrderHandler) GetOrderServiceByID(c *gin.Context) {
 	orderServiceIDStr := c.Param("id")
 	orderServiceID, err := strconv.ParseInt(orderServiceIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -273,12 +240,7 @@ func (h *OrderHandler) GetOrderServiceByID(c *gin.Context) {
 
 	orderService, err := h.orderSvc.GetOrderServiceByID(ctx, user.ID, orderServiceID, departmentID)
 	if err != nil {
-		switch err {
-		case common.ErrOrderServiceNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -294,19 +256,19 @@ func (h *OrderHandler) UpdateOrderServiceForAdmin(c *gin.Context) {
 	orderServiceIDStr := c.Param("id")
 	orderServiceID, err := strconv.ParseInt(orderServiceIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -325,14 +287,7 @@ func (h *OrderHandler) UpdateOrderServiceForAdmin(c *gin.Context) {
 	}
 
 	if err = h.orderSvc.UpdateOrderServiceForAdmin(ctx, departmentID, user.ID, orderServiceID, req); err != nil {
-		switch err {
-		case common.ErrOrderServiceNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrInvalidStatus, common.ErrBookingExpired:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -345,13 +300,13 @@ func (h *OrderHandler) GetOrderServicesForGuest(c *gin.Context) {
 
 	orderRoomID := c.GetInt64("order_room_id")
 	if orderRoomID == 0 {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 
 	orderServices, err := h.orderSvc.GetOrderServicesForGuest(ctx, orderRoomID)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 

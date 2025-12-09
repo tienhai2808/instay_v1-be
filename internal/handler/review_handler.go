@@ -25,7 +25,7 @@ func (h *ReviewHandler) CreateReview(c *gin.Context) {
 
 	orderRoomID := c.GetInt64("order_room_id")
 	if orderRoomID == 0 {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 
@@ -37,14 +37,7 @@ func (h *ReviewHandler) CreateReview(c *gin.Context) {
 	}
 
 	if err := h.reviewSvc.CreateReview(ctx, orderRoomID, req); err != nil {
-		switch err {
-		case common.ErrOrderRoomReviewed:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		case common.ErrForbidden:
-			common.ToAPIResponse(c, http.StatusForbidden, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -57,18 +50,13 @@ func (h *ReviewHandler) GetMyReview(c *gin.Context) {
 
 	orderRoomID := c.GetInt64("order_room_id")
 	if orderRoomID == 0 {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 
 	review, err := h.reviewSvc.GetMyReview(ctx, orderRoomID)
 	if err != nil {
-		switch err {
-		case common.ErrReviewNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -90,7 +78,7 @@ func (h *ReviewHandler) GetReviews(c *gin.Context) {
 
 	reviews, meta, err := h.reviewSvc.GetReviews(ctx, query)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -106,7 +94,7 @@ func (h *ReviewHandler) UpdateMyReview(c *gin.Context) {
 
 	orderRoomID := c.GetInt64("order_room_id")
 	if orderRoomID == 0 {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 
@@ -118,12 +106,7 @@ func (h *ReviewHandler) UpdateMyReview(c *gin.Context) {
 	}
 
 	if err := h.reviewSvc.UpdateReview(ctx, req, orderRoomID); err != nil {
-		switch err {
-		case common.ErrReviewNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 

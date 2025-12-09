@@ -28,7 +28,7 @@ func NewWSHandler(hub *hub.WSHub) *WSHandler {
 func (h *WSHandler) ServeWS(c *gin.Context) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -36,7 +36,7 @@ func (h *WSHandler) ServeWS(c *gin.Context) {
 	clientType := c.GetString("client_type")
 	departmentID := c.GetInt64("department_id")
 	if clientID == 0 && clientType == "" {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 

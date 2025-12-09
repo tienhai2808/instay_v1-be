@@ -26,13 +26,13 @@ func (h *DepartmentHandler) CreateDepartment(c *gin.Context) {
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -44,12 +44,7 @@ func (h *DepartmentHandler) CreateDepartment(c *gin.Context) {
 	}
 
 	if err := h.departmentSvc.CreateDepartment(ctx, user.ID, req); err != nil {
-		switch err {
-		case common.ErrDepartmentAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -62,7 +57,7 @@ func (h *DepartmentHandler) GetDepartments(c *gin.Context) {
 
 	departments, err := h.departmentSvc.GetDepartments(ctx)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -77,7 +72,7 @@ func (h *DepartmentHandler) GetSimpleDepartments(c *gin.Context) {
 
 	departments, err := h.departmentSvc.GetSimpleDepartments(ctx)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -93,19 +88,19 @@ func (h *DepartmentHandler) UpdateDepartment(c *gin.Context) {
 	departmentIDStr := c.Param("id")
 	departmentID, err := strconv.ParseInt(departmentIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -117,14 +112,7 @@ func (h *DepartmentHandler) UpdateDepartment(c *gin.Context) {
 	}
 
 	if err := h.departmentSvc.UpdateDepartment(ctx, departmentID, user.ID, req); err != nil {
-		switch err {
-		case common.ErrDepartmentAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		case common.ErrDepartmentNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -138,19 +126,12 @@ func (h *DepartmentHandler) DeleteDepartment(c *gin.Context) {
 	departmentIDStr := c.Param("id")
 	departmentID, err := strconv.ParseInt(departmentIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	if err := h.departmentSvc.DeleteDepartment(ctx, departmentID); err != nil {
-		switch err {
-		case common.ErrDepartmentNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrProtectedRecord:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 

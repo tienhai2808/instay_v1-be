@@ -41,13 +41,13 @@ func (h *ServiceHandler) CreateServiceType(c *gin.Context) {
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -59,14 +59,7 @@ func (h *ServiceHandler) CreateServiceType(c *gin.Context) {
 	}
 
 	if err := h.serviceSvc.CreateServiceType(ctx, user.ID, req); err != nil {
-		switch err {
-		case common.ErrServiceTypeAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		case common.ErrDepartmentNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -90,7 +83,7 @@ func (h *ServiceHandler) GetServiceTypesForAdmin(c *gin.Context) {
 
 	serviceTypes, err := h.serviceSvc.GetServiceTypesForAdmin(ctx)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -122,19 +115,19 @@ func (h *ServiceHandler) UpdateServiceType(c *gin.Context) {
 	serviceTypeIDStr := c.Param("id")
 	serviceTypeID, err := strconv.ParseInt(serviceTypeIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -146,14 +139,7 @@ func (h *ServiceHandler) UpdateServiceType(c *gin.Context) {
 	}
 
 	if err := h.serviceSvc.UpdateServiceType(ctx, serviceTypeID, user.ID, req); err != nil {
-		switch err {
-		case common.ErrServiceTypeAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		case common.ErrDepartmentNotFound, common.ErrServiceTypeNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -181,19 +167,12 @@ func (h *ServiceHandler) DeleteServiceType(c *gin.Context) {
 	serviceTypeIDStr := c.Param("id")
 	serviceTypeID, err := strconv.ParseInt(serviceTypeIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	if err = h.serviceSvc.DeleteServiceType(ctx, serviceTypeID); err != nil {
-		switch err {
-		case common.ErrServiceTypeNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrProtectedRecord:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -221,13 +200,13 @@ func (h *ServiceHandler) CreateService(c *gin.Context) {
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -240,14 +219,7 @@ func (h *ServiceHandler) CreateService(c *gin.Context) {
 
 	id, err := h.serviceSvc.CreateService(ctx, user.ID, req)
 	if err != nil {
-		switch err {
-		case common.ErrServiceAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		case common.ErrServiceTypeNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -282,7 +254,7 @@ func (h *ServiceHandler) GetServicesForAdmin(c *gin.Context) {
 
 	services, meta, err := h.serviceSvc.GetServicesForAdmin(ctx, query)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -313,18 +285,13 @@ func (h *ServiceHandler) GetServiceByID(c *gin.Context) {
 	serviceIDStr := c.Param("id")
 	serviceID, err := strconv.ParseInt(serviceIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	service, err := h.serviceSvc.GetServiceByID(ctx, serviceID)
 	if err != nil {
-		switch err {
-		case common.ErrServiceNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -356,19 +323,19 @@ func (h *ServiceHandler) UpdateService(c *gin.Context) {
 	serviceIDStr := c.Param("id")
 	serviceID, err := strconv.ParseInt(serviceIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -380,14 +347,7 @@ func (h *ServiceHandler) UpdateService(c *gin.Context) {
 	}
 
 	if err := h.serviceSvc.UpdateService(ctx, serviceID, user.ID, req); err != nil {
-		switch err {
-		case common.ErrServiceNotFound, common.ErrServiceTypeNotFound, common.ErrHasServiceImageNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrServiceAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -409,7 +369,7 @@ func (h *ServiceHandler) GetServiceTypesForGuest(c *gin.Context) {
 
 	serviceTypes, err := h.serviceSvc.GetServiceTypesForGuest(ctx)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -439,19 +399,12 @@ func (h *ServiceHandler) DeleteService(c *gin.Context) {
 	serviceIDStr := c.Param("id")
 	serviceID, err := strconv.ParseInt(serviceIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	if err := h.serviceSvc.DeleteService(ctx, serviceID); err != nil {
-		switch err {
-		case common.ErrServiceNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrProtectedRecord:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -466,12 +419,7 @@ func (h *ServiceHandler) GetServiceTypeBySlugWithServices(c *gin.Context) {
 
 	serviceType, err := h.serviceSvc.GetServiceTypeBySlugWithServices(ctx, serviceTypeSlug)
 	if err != nil {
-		switch err {
-		case common.ErrServiceTypeNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -488,12 +436,7 @@ func (h *ServiceHandler) GetServiceBySlug(c *gin.Context) {
 
 	service, err := h.serviceSvc.GetServiceBySlug(ctx, serviceSlug)
 	if err != nil {
-		switch err {
-		case common.ErrServiceNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 

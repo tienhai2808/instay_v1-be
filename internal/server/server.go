@@ -88,6 +88,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 
 	r.Use(cors.New(corsConfig))
 	r.Use(ctn.ReqMid.Recovery())
+	r.Use(ctn.ReqMid.ErrorHandler())
 
 	api := r.Group(cfg.Server.APIPrefix)
 

@@ -52,12 +52,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	user, accessToken, refreshToken, err := h.authSvc.Login(ctx, req)
 	if err != nil {
-		switch err {
-		case common.ErrLoginFailed:
-			common.ToAPIResponse(c, http.StatusBadRequest, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -102,13 +97,13 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 	userID := c.GetInt64("user_id")
 	userRole := c.GetString("user_role")
 	if userID == 0 || userRole == "" {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	accessToken, refreshToken, err := h.authSvc.RefreshToken(userID, userRole)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -132,13 +127,13 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 func (h *AuthHandler) GetMe(c *gin.Context) {
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -168,13 +163,13 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -186,14 +181,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	}
 
 	if err := h.authSvc.ChangePassword(ctx, user.ID, req); err != nil {
-		switch err {
-		case common.ErrUserNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrIncorrectPassword:
-			common.ToAPIResponse(c, http.StatusBadRequest, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -228,12 +216,7 @@ func (h *AuthHandler) ForgotPassword(c *gin.Context) {
 
 	forgotPasswordToken, err := h.authSvc.ForgotPassword(ctx, req.Email)
 	if err != nil {
-		switch err {
-		case common.ErrUserNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -267,14 +250,7 @@ func (h *AuthHandler) VerifyForgotPassword(c *gin.Context) {
 
 	refreshPasswordToken, err := h.authSvc.VerifyForgotPassword(ctx, req)
 	if err != nil {
-		switch err {
-		case common.ErrInvalidOTP, common.ErrInvalidToken:
-			common.ToAPIResponse(c, http.StatusBadRequest, err.Error(), nil)
-		case common.ErrTooManyAttempts:
-			common.ToAPIResponse(c, http.StatusTooManyRequests, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -307,14 +283,7 @@ func (h *AuthHandler) ResetPassword(c *gin.Context) {
 	}
 
 	if err := h.authSvc.ResetPassword(ctx, req); err != nil {
-		switch err {
-		case common.ErrUserNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrInvalidToken:
-			common.ToAPIResponse(c, http.StatusBadRequest, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -348,26 +317,19 @@ func (h *AuthHandler) UpdateInfo(c *gin.Context) {
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
 	updatedUser, err := h.authSvc.UpdateInfo(ctx, user.ID, req)
 	if err != nil {
-		switch err {
-		case common.ErrEmailAlreadyExists, common.ErrPhoneAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		case common.ErrUserNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 

@@ -26,13 +26,13 @@ func (h *RequestHandler) CreateRequestType(c *gin.Context) {
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -44,14 +44,7 @@ func (h *RequestHandler) CreateRequestType(c *gin.Context) {
 	}
 
 	if err := h.requestSvc.CreateRequestType(ctx, user.ID, req); err != nil {
-		switch err {
-		case common.ErrRequestTypeAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		case common.ErrDepartmentNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -64,7 +57,7 @@ func (h *RequestHandler) GetRequestTypesForAdmin(c *gin.Context) {
 
 	requestTypes, err := h.requestSvc.GetRequestTypesForAdmin(ctx)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -79,7 +72,7 @@ func (h *RequestHandler) GetRequestTypesForGuest(c *gin.Context) {
 
 	requestTypes, err := h.requestSvc.GetRequestTypesForGuest(ctx)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -95,19 +88,19 @@ func (h *RequestHandler) UpdateRequestType(c *gin.Context) {
 	requestTypeIDStr := c.Param("id")
 	requestTypeID, err := strconv.ParseInt(requestTypeIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -119,14 +112,8 @@ func (h *RequestHandler) UpdateRequestType(c *gin.Context) {
 	}
 
 	if err = h.requestSvc.UpdateRequestType(ctx, requestTypeID, user.ID, req); err != nil {
-		switch err {
-		case common.ErrRequestTypeAlreadyExists:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		case common.ErrDepartmentNotFound, common.ErrRequestTypeNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
+		return
 	}
 
 	common.ToAPIResponse(c, http.StatusOK, "Request type updated successfully", nil)
@@ -139,19 +126,12 @@ func (h *RequestHandler) DeleteRequestType(c *gin.Context) {
 	requestTypeIDStr := c.Param("id")
 	requestTypeID, err := strconv.ParseInt(requestTypeIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	if err = h.requestSvc.DeleteRequestType(ctx, requestTypeID); err != nil {
-		switch err {
-		case common.ErrRequestTypeNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrProtectedRecord:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -164,7 +144,7 @@ func (h *RequestHandler) CreateRequest(c *gin.Context) {
 
 	orderRoomID := c.GetInt64("order_room_id")
 	if orderRoomID == 0 {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 
@@ -177,14 +157,7 @@ func (h *RequestHandler) CreateRequest(c *gin.Context) {
 
 	id, err := h.requestSvc.CreateRequest(ctx, orderRoomID, req)
 	if err != nil {
-		switch err {
-		case common.ErrRequestTypeNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrOrderRoomNotFound:
-			common.ToAPIResponse(c, http.StatusForbidden, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -200,13 +173,13 @@ func (h *RequestHandler) UpdateRequestForGuest(c *gin.Context) {
 	requestIDStr := c.Param("id")
 	requestID, err := strconv.ParseInt(requestIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	orderRoomID := c.GetInt64("order_room_id")
 	if orderRoomID == 0 {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 
@@ -218,16 +191,7 @@ func (h *RequestHandler) UpdateRequestForGuest(c *gin.Context) {
 	}
 
 	if err := h.requestSvc.UpdateRequestForGuest(ctx, orderRoomID, requestID, req.Status); err != nil {
-		switch err {
-		case common.ErrRequestNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrOrderRoomNotFound:
-			common.ToAPIResponse(c, http.StatusForbidden, err.Error(), nil)
-		case common.ErrInvalidStatus:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -240,13 +204,13 @@ func (h *RequestHandler) GetRequestsForGuest(c *gin.Context) {
 
 	orderRoomID := c.GetInt64("order_room_id")
 	if orderRoomID == 0 {
-		common.ToAPIResponse(c, http.StatusForbidden, common.ErrForbidden.Error(), nil)
+		c.Error(common.ErrForbidden)
 		return
 	}
 
 	requests, err := h.requestSvc.GetRequestsForGuest(ctx, orderRoomID)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -262,19 +226,19 @@ func (h *RequestHandler) GetRequestByID(c *gin.Context) {
 	requestIDStr := c.Param("id")
 	requestID, err := strconv.ParseInt(requestIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -287,12 +251,7 @@ func (h *RequestHandler) GetRequestByID(c *gin.Context) {
 
 	request, err := h.requestSvc.GetRequestByID(ctx, user.ID, requestID, departmentID)
 	if err != nil {
-		switch err {
-		case common.ErrRequestNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 
@@ -307,13 +266,13 @@ func (h *RequestHandler) GetRequestsForAdmin(c *gin.Context) {
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -333,7 +292,7 @@ func (h *RequestHandler) GetRequestsForAdmin(c *gin.Context) {
 
 	requests, meta, err := h.requestSvc.GetRequestsForAdmin(ctx, query, departmentID)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -350,19 +309,19 @@ func (h *RequestHandler) UpdateRequestForAdmin(c *gin.Context) {
 	requestIDStr := c.Param("id")
 	requestID, err := strconv.ParseInt(requestIDStr, 10, 64)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusBadRequest, common.ErrInvalidID.Error(), nil)
+		c.Error(common.ErrInvalidID)
 		return
 	}
 
 	userAny, exists := c.Get("user")
 	if !exists {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrUnAuth.Error(), nil)
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
 	user, ok := userAny.(*types.UserData)
 	if !ok {
-		common.ToAPIResponse(c, http.StatusUnauthorized, common.ErrInvalidUser.Error(), nil)
+		c.Error(common.ErrInvalidUser)
 		return
 	}
 
@@ -381,14 +340,7 @@ func (h *RequestHandler) UpdateRequestForAdmin(c *gin.Context) {
 	}
 
 	if err = h.requestSvc.UpdateRequestForAdmin(ctx, departmentID, user.ID, requestID, req.Status); err != nil {
-		switch err {
-		case common.ErrRequestNotFound:
-			common.ToAPIResponse(c, http.StatusNotFound, err.Error(), nil)
-		case common.ErrInvalidStatus, common.ErrBookingExpired:
-			common.ToAPIResponse(c, http.StatusConflict, err.Error(), nil)
-		default:
-			common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
-		}
+		c.Error(err)
 		return
 	}
 

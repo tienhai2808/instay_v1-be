@@ -43,7 +43,7 @@ func (h *FileHandler) UploadPresignedURLs(c *gin.Context) {
 
 	presignedURLs, err := h.fileSvc.CreateUploadURLs(ctx, req)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 
@@ -76,7 +76,7 @@ func (h *FileHandler) ViewPresignedURLs(c *gin.Context) {
 
 	presignedURLs, err := h.fileSvc.CreateViewURLs(ctx, req)
 	if err != nil {
-		common.ToAPIResponse(c, http.StatusInternalServerError, "internal server error", nil)
+		c.Error(err)
 		return
 	}
 

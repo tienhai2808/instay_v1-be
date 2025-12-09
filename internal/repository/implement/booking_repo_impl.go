@@ -100,18 +100,6 @@ func (r *bookingRepoImpl) GetRevenueBySource(ctx context.Context) ([]*types.Char
 	return results, err
 }
 
-func (r *bookingRepoImpl) FindBookingByID(ctx context.Context, bookingID int64) (*model.Booking, error) {
-	var booking model.Booking
-	if err := r.db.WithContext(ctx).Where("id = ?", bookingID).First(&booking).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil
-		}
-		return nil, err
-	}
-
-	return &booking, nil
-}
-
 func (r *bookingRepoImpl) FindSourceByName(ctx context.Context, sourceName string) (*model.Source, error) {
 	var source model.Source
 	if err := r.db.WithContext(ctx).Where("name = ?", sourceName).First(&source).Error; err != nil {

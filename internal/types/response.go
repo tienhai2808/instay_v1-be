@@ -455,6 +455,7 @@ type ReviewResponse struct {
 type DashboardResponse struct {
 	TotalStaff     int64   `json:"total_staff"`
 	TotalRooms     int64   `json:"total_rooms"`
+	OccupiedRooms  int64   `json:"occupied_rooms"`
 	TotalServices  int64   `json:"total_services"`
 	TotalBookings  int64   `json:"total_bookings"`
 	BookingRevenue float64 `json:"booking_revenue"`

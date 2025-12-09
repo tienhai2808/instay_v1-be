@@ -164,14 +164,15 @@ type ReviewPaginationQuery struct {
 }
 
 type RoomPaginationQuery struct {
-	Page       uint32 `form:"page" binding:"omitempty,min=1" json:"page"`
-	Limit      uint32 `form:"limit" binding:"omitempty,min=1,max=100" json:"limit"`
-	Sort       string `form:"sort" json:"sort"`
-	Order      string `form:"order" binding:"omitempty,oneof=asc desc" json:"order"`
-	Search     string `form:"search" json:"search"`
-	RoomTypeID int64  `form:"room_type_id" binding:"omitempty" json:"room_type_id"`
-	FloorID    int64  `form:"floor_id" binding:"omitempty" json:"floor_id"`
-	InUse      *bool  `form:"in_use" binding:"omitempty" json:"in_use"`
+	Page         uint32 `form:"page" binding:"omitempty,min=1" json:"page"`
+	Limit        uint32 `form:"limit" binding:"omitempty,min=1,max=100" json:"limit"`
+	Sort         string `form:"sort" json:"sort"`
+	Order        string `form:"order" binding:"omitempty,oneof=asc desc" json:"order"`
+	Search       string `form:"search" json:"search"`
+	RoomTypeID   int64  `form:"room_type_id" binding:"omitempty" json:"room_type_id"`
+	FloorID      int64  `form:"floor_id" binding:"omitempty" json:"floor_id"`
+	InUse        *bool  `form:"in_use" binding:"omitempty" json:"in_use"`
+	RoomTypeName string `form:"room_type_name" binding:"omitempty" json:"room_type_name"`
 }
 
 type CreateRequestTypeRequest struct {
