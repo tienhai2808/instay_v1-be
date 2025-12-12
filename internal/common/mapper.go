@@ -6,6 +6,10 @@ import (
 )
 
 func ToUserResponse(user *model.User) *types.UserResponse {
+	if user == nil {
+		return nil
+	}
+	
 	return &types.UserResponse{
 		ID:         user.ID,
 		Email:      user.Email,
@@ -76,6 +80,10 @@ func ToRoomsResponse(rooms []*model.Room) []*types.RoomResponse {
 }
 
 func ToUserData(user *model.User) *types.UserData {
+	if user == nil {
+		return nil
+	}
+
 	return &types.UserData{
 		ID:         user.ID,
 		Email:      user.Email,
@@ -90,7 +98,24 @@ func ToUserData(user *model.User) *types.UserData {
 	}
 }
 
+func ToStaffData(user *model.User) *types.StaffData {
+	if user == nil {
+		return nil
+	}
+
+	return &types.StaffData{
+		ID:        user.ID,
+		Username:  user.Username,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+	}
+}
+
 func ToSimpleUserResponse(user *model.User) *types.SimpleUserResponse {
+	if user == nil {
+		return nil
+	}
+
 	return &types.SimpleUserResponse{
 		ID:         user.ID,
 		FirstName:  user.FirstName,
@@ -116,6 +141,10 @@ func ToSimpleUsersResponse(users []*model.User) []*types.SimpleUserResponse {
 }
 
 func ToDepartmentResponse(department *model.Department) *types.DepartmentResponse {
+	if department == nil {
+		return nil
+	}
+
 	return &types.DepartmentResponse{
 		ID:          department.ID,
 		Name:        department.Name,
@@ -751,10 +780,9 @@ func ToBasicChatWithMessagesResponse(chat *model.Chat) *types.BasicChatWithMessa
 	}
 
 	return &types.BasicChatWithMessageResponse{
-		ID:         chat.ID,
-		Department: ToSimpleDepartmentResponse(chat.Department),
-		ExpiredAt:  chat.ExpiredAt,
-		Messages:   ToBasicMessagesResponse(chat.Messages),
+		ID:        chat.ID,
+		ExpiredAt: chat.ExpiredAt,
+		Messages:  ToBasicMessagesResponse(chat.Messages),
 	}
 }
 
@@ -876,16 +904,22 @@ func ToMessageStaffResponse(messageStaff *model.MessageStaff) *types.MessageStaf
 	}
 }
 
+func ToMessageStaffsResponse(messageStaffs []*model.MessageStaff) []*types.MessageStaffResponse {
+	if len(messageStaffs) == 0 {
+		return make([]*types.MessageStaffResponse, 0)
+	}
+
+	messageStaffsRes := make([]*types.MessageStaffResponse, 0, len(messageStaffs))
+	for _, messageStaff := range messageStaffs {
+		messageStaffsRes = append(messageStaffsRes, ToMessageStaffResponse(messageStaff))
+	}
+
+	return messageStaffsRes
+}
+
 func ToSimpleMessageResponse(message *model.Message) *types.SimpleMessageResponse {
 	if message == nil {
 		return nil
-	}
-
-	var staffRead *types.MessageStaffResponse
-	if len(message.StaffsRead) > 0 {
-		staffRead = ToMessageStaffResponse(message.StaffsRead[0])
-	} else {
-		staffRead = nil
 	}
 
 	return &types.SimpleMessageResponse{
@@ -897,7 +931,7 @@ func ToSimpleMessageResponse(message *model.Message) *types.SimpleMessageRespons
 		CreatedAt:  message.CreatedAt,
 		IsRead:     message.IsRead,
 		ReadAt:     message.ReadAt,
-		StaffRead:  staffRead,
+		StaffReads: ToMessageStaffsResponse(message.StaffsRead),
 	}
 }
 
@@ -937,10 +971,27 @@ func ToBasicChatResponse(chat *model.Chat) *types.BasicChatResponse {
 
 	return &types.BasicChatResponse{
 		ID:          chat.ID,
-		Code:        chat.Code,
-		Department:  ToSimpleDepartmentResponse(chat.Department),
 		ExpiredAt:   chat.ExpiredAt,
 		LastMessage: ToBasicMessageResponse(chat.Messages[0]),
+	}
+}
+
+func ToMessageResponse(message *model.Message) *types.MessageResponse {
+	if message == nil {
+		return nil
+	}
+
+	return &types.MessageResponse{
+		ID:         message.ID,
+		Content:    message.Content,
+		ImageKey:   message.ImageKey,
+		SenderType: message.SenderType,
+		CreatedAt:  message.CreatedAt,
+		IsRead:     message.IsRead,
+		ReadAt:     message.ReadAt,
+		StaffReads: ToMessageStaffsResponse(message.StaffsRead),
+		Sender:     ToBasicUserResponse(message.Sender),
+		ChatID:     message.ChatID,
 	}
 }
 

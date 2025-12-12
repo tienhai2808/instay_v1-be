@@ -9,7 +9,7 @@ import (
 )
 
 type OrderRepository interface {
-	CreateOrderRoom(ctx context.Context, orderRoom *model.OrderRoom) error
+	CreateOrderRoomTx(tx *gorm.DB, orderRoom *model.OrderRoom) error
 
 	CreateOrderServiceTx(tx *gorm.DB, orderService *model.OrderService) error
 

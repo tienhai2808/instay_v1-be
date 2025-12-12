@@ -16,10 +16,10 @@ type OrderRoom struct {
 	CreatedBy     *User           `gorm:"foreignKey:CreatedByID;references:ID;constraint:fk_order_rooms_created_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"created_by"`
 	UpdatedBy     *User           `gorm:"foreignKey:UpdatedByID;references:ID;constraint:fk_order_rooms_updated_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"updated_by"`
 	Review        *Review         `gorm:"foreignKey:OrderRoomID;references:ID;constraint:fk_reviews_order_room,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"review"`
+	Chat          *Chat           `gorm:"foreignKey:OrderRoomID;references:ID;constraint:fk_chats_order_room,OnUpdate:CASCADE,OnDelete:CASCADE" json:"chat"`
 	OrderServices []*OrderService `gorm:"foreignKey:OrderRoomID;references:ID;constraint:fk_order_services_order_room,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"order_services"`
 	Requests      []*Request      `gorm:"foreignKey:OrderRoomID;references:ID;constraint:fk_requests_order_room,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"requests"`
 	Notifications []*Notification `gorm:"foreignKey:OrderRoomID;references:ID;constraint:fk_notifications_order_room,OnUpdate:CASCADE,OnDelete:CASCADE" json:"notifications"`
-	Chats         []*Chat         `gorm:"foreignKey:OrderRoomID;references:ID;constraint:fk_chats_order_room,OnUpdate:CASCADE,OnDelete:CASCADE" json:"chats"`
 }
 
 type OrderService struct {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/InstaySystem/is-be/internal/common"
 	"github.com/InstaySystem/is-be/internal/service"
 	"github.com/InstaySystem/is-be/internal/types"
 	"github.com/google/uuid"
@@ -34,25 +35,25 @@ var (
 )
 
 type WSClient struct {
-	Hub          *WSHub
-	Conn         *websocket.Conn
-	Send         chan []byte
-	ID           string
-	ClientID     int64
-	Type         string
-	DepartmentID *int64
-	ActiveChats  map[int64]bool
+	Hub         *WSHub
+	Conn        *websocket.Conn
+	Send        chan []byte
+	ID          string
+	ClientID    int64
+	StaffData   *types.StaffData
+	Type        string
+	ActiveChats map[int64]bool
 }
 
-func NewWSClient(hub *WSHub, conn *websocket.Conn, clientID int64, clientType string, departmentID *int64) *WSClient {
+func NewWSClient(hub *WSHub, conn *websocket.Conn, clientID int64, clientType string, staffData *types.StaffData) *WSClient {
 	return &WSClient{
 		hub,
 		conn,
 		make(chan []byte, 256),
 		uuid.NewString(),
 		clientID,
+		staffData,
 		clientType,
-		departmentID,
 		make(map[int64]bool),
 	}
 }
@@ -126,7 +127,7 @@ func (c *WSClient) handleSendMessage(content []byte) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	message, err := c.Hub.ChatSvc.CreateMessage(ctx, c.ClientID, c.DepartmentID, c.Type, req)
+	message, err := c.Hub.ChatSvc.CreateMessage(ctx, req.ChatID, c.ClientID, c.Type, req)
 	if err != nil {
 		c.sendError("send message failed")
 		return
@@ -134,13 +135,13 @@ func (c *WSClient) handleSendMessage(content []byte) {
 
 	res := types.WSResponse{
 		Event: eventNewMessage,
-		Data:  message,
+		Data:  common.ToMessageResponse(message),
 	}
 
 	resBytes, _ := json.Marshal(res)
 
 	targets := []string{
-		fmt.Sprintf("dept_%d", message.Chat.DepartmentID),
+		"staff",
 		fmt.Sprintf("guest_%d", message.Chat.OrderRoomID),
 	}
 
@@ -174,15 +175,15 @@ func (c *WSClient) handleMarkRead(content []byte) {
 		Event: eventMarkRead,
 		Data: types.UpdateReadMessagesResponse{
 			ChatID:     req.ChatID,
-			ReaderID:   c.ClientID,
 			ReaderType: c.Type,
-			ReadAt:     chat.LastMessageAt,
+			ReadAt:     *chat.LastMessageAt,
+			Reader:     (*types.BasicUserResponse)(c.StaffData),
 		},
 	}
 
 	resBytes, _ := json.Marshal(res)
 	targets := []string{
-		fmt.Sprintf("dept_%d", chat.DepartmentID),
+		"staff",
 		fmt.Sprintf("guest_%d", chat.OrderRoomID),
 	}
 
@@ -291,9 +292,6 @@ func (c *WSClient) getKey() string {
 	if c.Type == "guest" {
 		return fmt.Sprintf("guest_%d", c.ClientID)
 	}
-	if c.DepartmentID != nil {
-		return fmt.Sprintf("dept_%d", *c.DepartmentID)
-	}
-	
-	return "unknown"
+
+	return "staff"
 }

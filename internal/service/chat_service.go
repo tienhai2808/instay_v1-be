@@ -8,15 +8,13 @@ import (
 )
 
 type ChatService interface {
-	CreateMessage(ctx context.Context, clientID int64, departmentID *int64, senderType string, req types.CreateMessageRequest) (*model.Message, error)
+	CreateMessage(ctx context.Context, chatID, clientID int64, senderType string, req types.CreateMessageRequest) (*model.Message, error)
 
-	GetChatsForAdmin(ctx context.Context, query types.ChatPaginationQuery, userID, departmentID int64) ([]*model.Chat, *types.MetaResponse, error)
+	GetChatsForAdmin(ctx context.Context, query types.ChatPaginationQuery, userID int64) ([]*model.Chat, *types.MetaResponse, error)
 
-	GetChatsForGuest(ctx context.Context, orderRoomID int64) ([]*model.Chat, error)
+	GetChatByID(ctx context.Context, chatID, userID int64) (*model.Chat, error)
 
-	GetChatByID(ctx context.Context, chatID, userID, departmentID int64) (*model.Chat, error)
-
-	GetChatByCode(ctx context.Context, chatCode string, orderRoomID int64) (*model.Chat, error)
+	GetMyChat(ctx context.Context, orderRoomID int64) (*model.Chat, error)
 
 	UpdateReadMessages(ctx context.Context, chatID, clientID int64, readerType string) (*model.Chat, error)
 }

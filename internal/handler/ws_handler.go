@@ -5,6 +5,7 @@ import (
 
 	"github.com/InstaySystem/is-be/internal/common"
 	"github.com/InstaySystem/is-be/internal/hub"
+	"github.com/InstaySystem/is-be/internal/types"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -34,20 +35,23 @@ func (h *WSHandler) ServeWS(c *gin.Context) {
 
 	clientID := c.GetInt64("client_id")
 	clientType := c.GetString("client_type")
-	departmentID := c.GetInt64("department_id")
-	if clientID == 0 && clientType == "" {
-		c.Error(common.ErrForbidden)
+	staffAny, _ := c.Get("staff")
+	if clientType == "staff" && staffAny == nil {
+		c.Error(common.ErrUnAuth)
 		return
 	}
 
-	var departmentIDP *int64
-	if departmentID == 0 {
-		departmentIDP = nil
-	} else {
-		departmentIDP = &departmentID
+	var staffData *types.StaffData
+	var ok bool
+	if staffAny != nil {
+		staffData, ok = staffAny.(*types.StaffData)
+		if !ok {
+			c.Error(common.ErrInvalidUser)
+			return
+		}
 	}
 
-	client := hub.NewWSClient(h.hub, conn, clientID, clientType, departmentIDP)
+	client := hub.NewWSClient(h.hub, conn, clientID, clientType, staffData)
 	h.hub.Register <- client
 
 	go client.WritePump()

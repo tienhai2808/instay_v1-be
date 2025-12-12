@@ -3,17 +3,13 @@ package model
 import "time"
 
 type Chat struct {
-	ID            int64     `gorm:"type:bigint;primaryKey" json:"id"`
-	Code          string    `gorm:"type:char(10);not null;uniqueIndex:chats_code_key" json:"code"`
-	OrderRoomID   int64     `gorm:"type:bigint;not null;uniqueIndex:chats_order_room_id_department_id_key" json:"order_room_id"`
-	DepartmentID  int64     `gorm:"type:bigint;not null;uniqueIndex:chats_order_room_id_department_id_key" json:"department_id"`
-	CreatedAt     time.Time `json:"created_at"`
-	ExpiredAt     time.Time `json:"expired_at"`
-	LastMessageAt time.Time `gorm:"not null;index:chats_last_message_at_idx" json:"last_message_at"`
+	ID            int64      `gorm:"type:bigint;primaryKey" json:"id"`
+	OrderRoomID   int64      `gorm:"type:bigint;not null;uniqueIndex:chats_order_room_id_key" json:"order_room_id"`
+	ExpiredAt     time.Time  `json:"expired_at"`
+	LastMessageAt *time.Time `gorm:"index:chats_last_message_at_idx" json:"last_message_at"`
 
-	Department *Department `gorm:"foreignKey:DepartmentID;references:ID;constraint:fk_chats_department,OnUpdate:CASCADE,OnDelete:CASCADE" json:"department"`
-	OrderRoom  *OrderRoom  `gorm:"foreignKey:OrderRoomID;references:ID;constraint:fk_chats_order_room,OnUpdate:CASCADE,OnDelete:CASCADE" json:"order_room"`
-	Messages   []*Message  `gorm:"foreignKey:ChatID;references:ID;constraint:fk_messages_chat,OnUpdate:CASCADE,OnDelete:CASCADE" json:"messages"`
+	OrderRoom *OrderRoom `gorm:"foreignKey:OrderRoomID;references:ID;constraint:fk_chats_order_room,OnUpdate:CASCADE,OnDelete:CASCADE" json:"order_room"`
+	Messages  []*Message `gorm:"foreignKey:ChatID;references:ID;constraint:fk_messages_chat,OnUpdate:CASCADE,OnDelete:CASCADE" json:"messages"`
 }
 
 type Message struct {

@@ -17,9 +17,7 @@ type ChatRepository interface {
 
 	UpdateChatTx(tx *gorm.DB, chatID int64, updateData map[string]any) error
 
-	FindAllChatsByDepartmentIDWithDetailsPaginated(ctx context.Context, query types.ChatPaginationQuery, staffID, departmentID int64) ([]*model.Chat, int64, error)
-
-	FindAllChatsByOrderRoomIDWithDetails(ctx context.Context, orderRoomID int64) ([]*model.Chat, error)
+	FindAllChatsWithDetailsPaginated(ctx context.Context, query types.ChatPaginationQuery, staffID int64) ([]*model.Chat, int64, error)
 
 	FindAllUnreadMessageIDsByChatIDAndSenderTypeTx(tx *gorm.DB, chatID, staffID int64, senderType string) ([]int64, error)
 
@@ -27,7 +25,7 @@ type ChatRepository interface {
 
 	UpdateMessagesByChatIDAndSenderTypeTx(tx *gorm.DB, chatID int64, senderType string, updateData map[string]any) error
 
-	FindChatByCodeWithDetails(ctx context.Context, chatCode string) (*model.Chat, error)
-
 	FindChatByIDWithDetails(ctx context.Context, chatID, staffID int64) (*model.Chat, error)
+
+	FindChatByOrderRoomIDWithDetails(ctx context.Context, orderRoomID int64) (*model.Chat, error)
 }

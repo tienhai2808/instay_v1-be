@@ -19,10 +19,11 @@ func NewChatContainer(
 	db *gorm.DB,
 	chatRepo repository.ChatRepository,
 	orderRepo repository.OrderRepository,
+	userRepo repository.UserRepository,
 	sfGen snowflake.Generator,
 	logger *zap.Logger,
 ) *ChatContainer {
-	svc := svcImpl.NewChatService(db, chatRepo, orderRepo, sfGen, logger)
+	svc := svcImpl.NewChatService(db, chatRepo, orderRepo, userRepo, sfGen, logger)
 	hdl := handler.NewChatHandler(svc)
 
 	return &ChatContainer{

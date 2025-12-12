@@ -7,7 +7,7 @@ import (
 )
 
 func ChatRouter(rg *gin.RouterGroup, hdl *handler.ChatHandler, authMid *middleware.AuthMiddleware) {
-	admin := rg.Group("/admin/chats", authMid.IsAuthentication())
+	admin := rg.Group("/admin/chats", authMid.IsAuthentication(), authMid.HasDepartment("customer-care"))
 	{
 		admin.GET("", hdl.GetChatsForAdmin)
 
@@ -16,8 +16,6 @@ func ChatRouter(rg *gin.RouterGroup, hdl *handler.ChatHandler, authMid *middlewa
 
 	guest := rg.Group("/chats", authMid.HasGuestToken())
 	{
-		guest.GET("", hdl.GetChatsForGuest)
-
-		guest.GET("/:code", hdl.GetChatByCode)
+		guest.GET("/me", hdl.GetMyChat)
 	}
 }

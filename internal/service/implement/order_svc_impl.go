@@ -28,6 +28,7 @@ type orderSvcImpl struct {
 	roomRepo         repository.RoomRepository
 	serviceRepo      repository.ServiceRepository
 	notificationRepo repository.Notification
+	chatRepo         repository.ChatRepository
 	sfGen            snowflake.Generator
 	logger           *zap.Logger
 	cacheProvider    cache.CacheProvider
@@ -42,6 +43,7 @@ func NewOrderService(
 	roomRepo repository.RoomRepository,
 	serviceRepo repository.ServiceRepository,
 	notificationRepo repository.Notification,
+	chatRepo repository.ChatRepository,
 	sfGen snowflake.Generator,
 	logger *zap.Logger,
 	cacheProvider cache.CacheProvider,
@@ -55,6 +57,7 @@ func NewOrderService(
 		roomRepo,
 		serviceRepo,
 		notificationRepo,
+		chatRepo,
 		sfGen,
 		logger,
 		cacheProvider,
@@ -77,7 +80,7 @@ func (s *orderSvcImpl) CreateOrderRoom(ctx context.Context, userID int64, req ty
 	if booking.CheckOut.Before(time.Now()) {
 		return 0, "", common.ErrBookingExpired
 	}
-	
+
 	diff := booking.CheckIn.Sub(now)
 	if diff <= -24*time.Hour || diff >= 24*time.Hour {
 		return 0, "", common.ErrCheckInOutOfRange
@@ -100,31 +103,57 @@ func (s *orderSvcImpl) CreateOrderRoom(ctx context.Context, userID int64, req ty
 		return 0, "", common.ErrRoomCurrentlyOccupied
 	}
 
-	id, err := s.sfGen.NextID()
+	orderRoomID, err := s.sfGen.NextID()
 	if err != nil {
 		s.logger.Error("generate order room id failed", zap.Error(err))
 		return 0, "", err
 	}
 
+	chatID, err := s.sfGen.NextID()
+	if err != nil {
+		s.logger.Error("generate chat id failed", zap.Error(err))
+		return 0, "", err
+	}
+
 	orderRoom := &model.OrderRoom{
-		ID:          id,
+		ID:          orderRoomID,
 		CreatedByID: userID,
 		UpdatedByID: userID,
 		BookingID:   req.BookingID,
 		RoomID:      req.RoomID,
 	}
 
-	if err = s.orderRepo.CreateOrderRoom(ctx, orderRoom); err != nil {
-		if ok, _ := common.IsUniqueViolation(err); ok {
-			return 0, "", common.ErrOrderRoomAlreadyExists
+	chat := &model.Chat{
+		ID:          chatID,
+		OrderRoomID: orderRoomID,
+		ExpiredAt:   booking.CheckOut,
+	}
+
+	if err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err = s.orderRepo.CreateOrderRoomTx(tx, orderRoom); err != nil {
+			if ok, _ := common.IsUniqueViolation(err); ok {
+				return common.ErrOrderRoomAlreadyExists
+			}
+			s.logger.Error("create order room failed", zap.Error(err))
+			return err
 		}
-		s.logger.Error("create order room failed", zap.Error(err))
+
+		if err = s.chatRepo.CreateChatTx(tx, chat); err != nil {
+			if ok, _ := common.IsUniqueViolation(err); ok {
+				return common.ErrChatAlreadyExists
+			}
+			s.logger.Error("create chat failed", zap.Error(err))
+			return err
+		}
+
+		return nil
+	}); err != nil {
 		return 0, "", err
 	}
 
 	secretCode := common.GenerateBase58ID(16)
 	orderData := types.OrderRoomData{
-		ID:        id,
+		ID:        orderRoomID,
 		ExpiredAt: booking.CheckOut,
 	}
 	bytes, _ := json.Marshal(orderData)
@@ -137,7 +166,7 @@ func (s *orderSvcImpl) CreateOrderRoom(ctx context.Context, userID int64, req ty
 		return 0, "", err
 	}
 
-	return id, secretCode, nil
+	return orderRoomID, secretCode, nil
 }
 
 func (s *orderSvcImpl) GetOrderRoomByID(ctx context.Context, orderRoomID int64) (*model.OrderRoom, error) {

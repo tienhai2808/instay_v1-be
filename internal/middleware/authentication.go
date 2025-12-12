@@ -299,14 +299,17 @@ func (m *AuthMiddleware) IsClient() gin.HandlerFunc {
 					})
 					return
 				}
-				
+
+				if user.Department != nil && user.Department.Name != "customer-care" {
+					c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
+						Message: common.ErrInvalidUser.Error(),
+					})
+					return
+				}
+
 				c.Set("client_id", user.ID)
 				c.Set("client_type", "staff")
-				if user.Department != nil {
-					c.Set("department_id", int64(user.Department.ID))
-				} else {
-					c.Set("department_id", nil)
-				}
+				c.Set("staff", common.ToStaffData(user))
 				c.Next()
 				return
 			}
@@ -318,7 +321,6 @@ func (m *AuthMiddleware) IsClient() gin.HandlerFunc {
 			if err == nil {
 				c.Set("client_id", orderRoomID)
 				c.Set("client_type", "guest")
-				c.Set("department_id", nil)
 				c.Next()
 				return
 			}

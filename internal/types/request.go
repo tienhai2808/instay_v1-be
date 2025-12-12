@@ -264,8 +264,9 @@ type NotificationPaginationQuery struct {
 }
 
 type ChatPaginationQuery struct {
-	Page  uint32 `form:"page" binding:"omitempty,min=1" json:"page"`
-	Limit uint32 `form:"limit" binding:"omitempty,min=1,max=100" json:"limit"`
+	Page   uint32 `form:"page" binding:"omitempty,min=1" json:"page"`
+	Limit  uint32 `form:"limit" binding:"omitempty,min=1,max=100" json:"limit"`
+	Search string `form:"search" json:"search"`
 }
 
 type RequestPaginationQuery struct {
@@ -280,10 +281,9 @@ type RequestPaginationQuery struct {
 }
 
 type CreateMessageRequest struct {
-	Content    *string `json:"content" binding:"omitempty"`
-	ImageKey   *string `json:"image_key" binding:"omitempty"`
-	ReceiverID *int64  `json:"receiver_id" binding:"omitempty"`
-	ChatID     *int64  `json:"chat_id" binding:"omitempty"`
+	Content  *string `json:"content" binding:"omitempty"`
+	ImageKey *string `json:"image_key" binding:"omitempty"`
+	ChatID   int64   `json:"chat_id" binding:"request"`
 }
 
 type WSRequest struct {

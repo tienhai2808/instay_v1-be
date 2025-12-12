@@ -2,7 +2,6 @@ package implement
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/InstaySystem/is-be/internal/common"
@@ -19,6 +18,7 @@ type chatSvcImpl struct {
 	db        *gorm.DB
 	chatRepo  repository.ChatRepository
 	orderRepo repository.OrderRepository
+	userRepo repository.UserRepository
 	sfGen     snowflake.Generator
 	logger    *zap.Logger
 }
@@ -27,6 +27,7 @@ func NewChatService(
 	db *gorm.DB,
 	chatRepo repository.ChatRepository,
 	orderRepo repository.OrderRepository,
+	userRepo repository.UserRepository,
 	sfGen snowflake.Generator,
 	logger *zap.Logger,
 ) service.ChatService {
@@ -34,19 +35,25 @@ func NewChatService(
 		db,
 		chatRepo,
 		orderRepo,
+		userRepo,
 		sfGen,
 		logger,
 	}
 }
 
-func (s *chatSvcImpl) CreateMessage(ctx context.Context, clientID int64, departmentID *int64, senderType string, req types.CreateMessageRequest) (*model.Message, error) {
+func (s *chatSvcImpl) CreateMessage(ctx context.Context, chatID, clientID int64, senderType string, req types.CreateMessageRequest) (*model.Message, error) {
 	var message *model.Message
 
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		now := time.Now()
-		chat, err := s.getOrCreateChat(tx, req, clientID, departmentID, senderType, now)
+
+		chat, err := s.chatRepo.FindChatByIDTx(tx, chatID)
 		if err != nil {
+			s.logger.Error("find chat by id failed", zap.Error(err))
 			return err
+		}
+		if chat == nil {
+			return common.ErrChatNotFound
 		}
 
 		messageID, err := s.sfGen.NextID()
@@ -62,7 +69,7 @@ func (s *chatSvcImpl) CreateMessage(ctx context.Context, clientID int64, departm
 
 		message = &model.Message{
 			ID:         messageID,
-			ChatID:     chat.ID,
+			ChatID:     chatID,
 			SenderType: senderType,
 			SenderID:   senderID,
 			ImageKey:   req.ImageKey,
@@ -75,13 +82,12 @@ func (s *chatSvcImpl) CreateMessage(ctx context.Context, clientID int64, departm
 			return err
 		}
 
-		if req.ChatID != nil {
-			if err = s.chatRepo.UpdateChatTx(tx, chat.ID, map[string]any{"last_message_at": now}); err != nil {
-				s.logger.Error("update chat failed", zap.Error(err))
-				return err
-			}
-			chat.LastMessageAt = now
+		if err = s.chatRepo.UpdateChatTx(tx, chatID, map[string]any{"last_message_at": now}); err != nil {
+			s.logger.Error("update chat failed", zap.Error(err))
+			return err
 		}
+		chat.LastMessageAt = &now
+
 		message.Chat = chat
 
 		return nil
@@ -95,6 +101,7 @@ func (s *chatSvcImpl) CreateMessage(ctx context.Context, clientID int64, departm
 func (s *chatSvcImpl) UpdateReadMessages(ctx context.Context, chatID, clientID int64, readerType string) (*model.Chat, error) {
 	var chat *model.Chat
 	var err error
+	
 	if err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		now := time.Now()
 
@@ -163,7 +170,7 @@ func (s *chatSvcImpl) UpdateReadMessages(ctx context.Context, chatID, clientID i
 	return chat, nil
 }
 
-func (s *chatSvcImpl) GetChatsForAdmin(ctx context.Context, query types.ChatPaginationQuery, userID, departmentID int64) ([]*model.Chat, *types.MetaResponse, error) {
+func (s *chatSvcImpl) GetChatsForAdmin(ctx context.Context, query types.ChatPaginationQuery, userID int64) ([]*model.Chat, *types.MetaResponse, error) {
 	if query.Page == 0 {
 		query.Page = 1
 	}
@@ -171,9 +178,9 @@ func (s *chatSvcImpl) GetChatsForAdmin(ctx context.Context, query types.ChatPagi
 		query.Limit = 10
 	}
 
-	chats, total, err := s.chatRepo.FindAllChatsByDepartmentIDWithDetailsPaginated(ctx, query, userID, departmentID)
+	chats, total, err := s.chatRepo.FindAllChatsWithDetailsPaginated(ctx, query, userID)
 	if err != nil {
-		s.logger.Error("find all chats by department id paginated failed", zap.Error(err))
+		s.logger.Error("find all chats paginated failed", zap.Error(err))
 		return nil, nil, err
 	}
 
@@ -194,17 +201,7 @@ func (s *chatSvcImpl) GetChatsForAdmin(ctx context.Context, query types.ChatPagi
 	return chats, meta, nil
 }
 
-func (s *chatSvcImpl) GetChatsForGuest(ctx context.Context, orderRoomID int64) ([]*model.Chat, error) {
-	chats, err := s.chatRepo.FindAllChatsByOrderRoomIDWithDetails(ctx, orderRoomID)
-	if err != nil {
-		s.logger.Error("find all chats by order room id failed", zap.Error(err))
-		return nil, err
-	}
-
-	return chats, nil
-}
-
-func (s *chatSvcImpl) GetChatByID(ctx context.Context, chatID, userID, departmentID int64) (*model.Chat, error) {
+func (s *chatSvcImpl) GetChatByID(ctx context.Context, chatID, userID int64) (*model.Chat, error) {
 	chat, err := s.chatRepo.FindChatByIDWithDetails(ctx, chatID, userID)
 	if err != nil {
 		s.logger.Error("find chat by id failed", zap.Error(err))
@@ -215,86 +212,17 @@ func (s *chatSvcImpl) GetChatByID(ctx context.Context, chatID, userID, departmen
 		return nil, common.ErrChatNotFound
 	}
 
-	if chat.DepartmentID != departmentID {
-		return nil, common.ErrChatNotFound
-	}
-
 	return chat, nil
 }
 
-func (s *chatSvcImpl) GetChatByCode(ctx context.Context, chatCode string, orderRoomID int64) (*model.Chat, error) {
-	chat, err := s.chatRepo.FindChatByCodeWithDetails(ctx, chatCode)
+func (s *chatSvcImpl) GetMyChat(ctx context.Context, orderRoomID int64) (*model.Chat, error) {
+	chat, err := s.chatRepo.FindChatByOrderRoomIDWithDetails(ctx, orderRoomID)
 	if err != nil {
-		s.logger.Error("find chat by code failed", zap.Error(err))
+		s.logger.Error("find chat by order room id failed", zap.Error(err))
 		return nil, err
 	}
 	if chat == nil {
 		return nil, common.ErrChatNotFound
-	}
-
-	if chat.OrderRoomID != orderRoomID {
-		return nil, common.ErrChatNotFound
-	}
-
-	return chat, nil
-}
-
-func (s *chatSvcImpl) getOrCreateChat(tx *gorm.DB, req types.CreateMessageRequest, clientID int64, departmentID *int64, senderType string, now time.Time) (*model.Chat, error) {
-	if req.ChatID != nil {
-		chat, err := s.chatRepo.FindChatByIDTx(tx, *req.ChatID)
-		if err != nil {
-			s.logger.Error("find chat by id failed", zap.Error(err))
-			return nil, err
-		}
-		return chat, nil
-	}
-
-	if req.ReceiverID == nil {
-		return nil, errors.New("receiverid is required for new chat")
-	}
-
-	var targetOrderRoomID int64
-	var targetDepartmentID int64
-
-	if senderType == "guest" {
-		targetOrderRoomID = clientID
-		targetDepartmentID = *req.ReceiverID
-	} else {
-		targetOrderRoomID = *req.ReceiverID
-
-		if departmentID == nil {
-			return nil, errors.New("staff must belong to a department to create chat")
-		}
-		targetDepartmentID = *departmentID
-	}
-
-	orderRoom, err := s.orderRepo.FindOrderRoomByIDWithBookingTx(tx, targetOrderRoomID)
-	if err != nil {
-		return nil, common.ErrOrderRoomNotFound
-	}
-
-	chatID, err := s.sfGen.NextID()
-	if err != nil {
-		s.logger.Error("generate chat id failed", zap.Error(err))
-		return nil, err
-	}
-
-	chat := &model.Chat{
-		ID:            chatID,
-		Code:          common.GenerateCode(5),
-		OrderRoomID:   targetOrderRoomID,
-		DepartmentID:  targetDepartmentID,
-		ExpiredAt:     orderRoom.Booking.CheckOut,
-		CreatedAt:     now,
-		LastMessageAt: now,
-	}
-
-	if err = s.chatRepo.CreateChatTx(tx, chat); err != nil {
-		if ok, _ := common.IsUniqueViolation(err); ok {
-			return nil, common.ErrChatAlreadyExists
-		}
-		s.logger.Error("create chat failed", zap.Error(err))
-		return nil, err
 	}
 
 	return chat, nil

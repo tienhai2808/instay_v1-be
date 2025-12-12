@@ -19,6 +19,13 @@ type UserData struct {
 	Department *DepartmentData `json:"department"`
 }
 
+type StaffData struct {
+	ID        int64  `json:"id"`
+	Username  string `json:"username"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+}
+
 type DepartmentData struct {
 	ID          int64  `json:"id"`
 	Name        string `json:"name"`

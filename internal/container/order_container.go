@@ -23,6 +23,7 @@ func NewOrderContainer(
 	roomRepo repository.RoomRepository,
 	serviceRepo repository.ServiceRepository,
 	notificationRepo repository.Notification,
+	chatRepo repository.ChatRepository,
 	sfGen snowflake.Generator,
 	logger *zap.Logger,
 	cacheProvider cache.CacheProvider,
@@ -30,7 +31,7 @@ func NewOrderContainer(
 	mqProvider mq.MessageQueueProvider,
 	guestName string,
 ) *OrderContainer {
-	svc := svcImpl.NewOrderService(db, orderRepo, bookingRepo, roomRepo, serviceRepo, notificationRepo, sfGen, logger, cacheProvider, jwtProvider, mqProvider)
+	svc := svcImpl.NewOrderService(db, orderRepo, bookingRepo, roomRepo, serviceRepo, notificationRepo, chatRepo, sfGen, logger, cacheProvider, jwtProvider, mqProvider)
 	hdl := handler.NewOrderHandler(svc, guestName)
 
 	return &OrderContainer{hdl}

@@ -2,7 +2,9 @@ package implement
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"strings"
 
 	"github.com/InstaySystem/is-be/internal/model"
 	"github.com/InstaySystem/is-be/internal/repository"
@@ -63,11 +65,19 @@ func (r *chatRepoImpl) UpdateMessagesByChatIDAndSenderTypeTx(tx *gorm.DB, chatID
 	return tx.Model(&model.Message{}).Where("chat_id = ? AND sender_type = ? AND is_read = false", chatID, senderType).Updates(updateData).Error
 }
 
-func (r *chatRepoImpl) FindAllChatsByDepartmentIDWithDetailsPaginated(ctx context.Context, query types.ChatPaginationQuery, staffID, departmentID int64) ([]*model.Chat, int64, error) {
+func (r *chatRepoImpl) FindAllChatsWithDetailsPaginated(ctx context.Context, query types.ChatPaginationQuery, staffID int64) ([]*model.Chat, int64, error) {
 	var chats []*model.Chat
 	var total int64
 
-	db := r.db.WithContext(ctx).Where("department_id = ?", departmentID).Model(&model.Chat{})
+	db := r.db.WithContext(ctx).Model(&model.Chat{})
+
+	if query.Search != "" {
+		searchTerm := "%" + strings.ToLower(query.Search) + "%"
+		db = db.Joins("JOIN order_rooms ON order_rooms.id = chats.order_room_id").
+			Joins("JOIN bookings ON bookings.id = order_rooms.booking_id").
+			Where("LOWER(bookings.booking_number) LIKE @q", sql.Named("q", searchTerm))
+	}
+
 	if err := db.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
@@ -93,7 +103,6 @@ func (r *chatRepoImpl) FindAllChatsByDepartmentIDWithDetailsPaginated(ctx contex
 
 func (r *chatRepoImpl) FindChatByIDWithDetails(ctx context.Context, chatID, staffID int64) (*model.Chat, error) {
 	var chat model.Chat
-
 	if err := r.db.WithContext(ctx).
 		Preload("OrderRoom.Room.Floor").
 		Preload("OrderRoom.Booking.Source").
@@ -108,14 +117,15 @@ func (r *chatRepoImpl) FindChatByIDWithDetails(ctx context.Context, chatID, staf
 		}
 		return nil, err
 	}
+
 	return &chat, nil
 }
 
-func (r *chatRepoImpl) FindChatByCodeWithDetails(ctx context.Context, chatCode string) (*model.Chat, error) {
+func (r *chatRepoImpl) FindChatByOrderRoomIDWithDetails(ctx context.Context, orderRoomID int64) (*model.Chat, error) {
 	var chat model.Chat
-	if err := r.db.WithContext(ctx).Preload("Department").Preload("Messages", func(db *gorm.DB) *gorm.DB {
+	if err := r.db.WithContext(ctx).Preload("Messages", func(db *gorm.DB) *gorm.DB {
 		return db.Order("created_at ASC")
-	}).Where("code = ?", chatCode).First(&chat).Error; err != nil {
+	}).Where("order_room_id = ?", orderRoomID).First(&chat).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
@@ -123,21 +133,4 @@ func (r *chatRepoImpl) FindChatByCodeWithDetails(ctx context.Context, chatCode s
 	}
 
 	return &chat, nil
-}
-
-func (r *chatRepoImpl) FindAllChatsByOrderRoomIDWithDetails(ctx context.Context, orderRoomID int64) ([]*model.Chat, error) {
-	var chats []*model.Chat
-	if err := r.db.WithContext(ctx).
-		Where("order_room_id = ?", orderRoomID).
-		Order("last_message_at DESC").
-		Preload("Department").
-		Preload("Messages", func(db *gorm.DB) *gorm.DB {
-			return db.Select("messages.*").
-				Joins("JOIN chats ON chats.id = messages.chat_id AND chats.last_message_at = messages.created_at")
-		}).
-		Find(&chats).Error; err != nil {
-		return nil, err
-	}
-
-	return chats, nil
 }

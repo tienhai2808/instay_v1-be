@@ -43,15 +43,7 @@ func (h *ChatHandler) GetChatsForAdmin(c *gin.Context) {
 		return
 	}
 
-	if user.Department == nil {
-		common.ToAPIResponse(c, http.StatusOK, "Get chat list successfully", gin.H{
-			"chats": []any{},
-			"meta":  &types.MetaResponse{},
-		})
-		return
-	}
-
-	chats, meta, err := h.chatSvc.GetChatsForAdmin(ctx, query, user.ID, user.Department.ID)
+	chats, meta, err := h.chatSvc.GetChatsForAdmin(ctx, query, user.ID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -86,7 +78,7 @@ func (h *ChatHandler) GetChatByID(c *gin.Context) {
 		return
 	}
 
-	chat, err := h.chatSvc.GetChatByID(ctx, chatID, user.ID, user.Department.ID)
+	chat, err := h.chatSvc.GetChatByID(ctx, chatID, user.ID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -97,7 +89,7 @@ func (h *ChatHandler) GetChatByID(c *gin.Context) {
 	})
 }
 
-func (h *ChatHandler) GetChatsForGuest(c *gin.Context) {
+func (h *ChatHandler) GetMyChat(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
 	defer cancel()
 
@@ -107,30 +99,7 @@ func (h *ChatHandler) GetChatsForGuest(c *gin.Context) {
 		return
 	}
 
-	chats, err := h.chatSvc.GetChatsForGuest(ctx, orderRoomID)
-	if err != nil {
-		c.Error(err)
-		return
-	}
-
-	common.ToAPIResponse(c, http.StatusOK, "Get chat list successfully", gin.H{
-		"chats": common.ToBasicChatsResponse(chats),
-	})
-}
-
-func (h *ChatHandler) GetChatByCode(c *gin.Context) {
-	ctx, cancel := context.WithTimeout(c.Request.Context(), 5*time.Second)
-	defer cancel()
-
-	chatCode := c.Param("code")
-
-	orderRoomID := c.GetInt64("order_room_id")
-	if orderRoomID == 0 {
-		c.Error(common.ErrForbidden)
-		return
-	}
-
-	chat, err := h.chatSvc.GetChatByCode(ctx, chatCode, orderRoomID)
+	chat, err := h.chatSvc.GetMyChat(ctx, orderRoomID)
 	if err != nil {
 		c.Error(err)
 		return
