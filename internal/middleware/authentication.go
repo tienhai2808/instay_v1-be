@@ -243,7 +243,7 @@ func (m *AuthMiddleware) HasGuestToken() gin.HandlerFunc {
 	}
 }
 
-func (m *AuthMiddleware) IsClient() gin.HandlerFunc {
+func (m *AuthMiddleware) IsGuestOrStaffHasDepartment(department *string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		accessToken, err := c.Cookie(m.accessName)
 		if err == nil {
@@ -300,7 +300,7 @@ func (m *AuthMiddleware) IsClient() gin.HandlerFunc {
 					return
 				}
 
-				if user.Department != nil && user.Department.Name != "customer-care" {
+				if user.Department != nil && department != nil && user.Department.Name != *department {
 					c.AbortWithStatusJSON(http.StatusForbidden, types.APIResponse{
 						Message: common.ErrInvalidUser.Error(),
 					})
@@ -309,6 +309,11 @@ func (m *AuthMiddleware) IsClient() gin.HandlerFunc {
 
 				c.Set("client_id", user.ID)
 				c.Set("client_type", "staff")
+				if user.Department != nil {
+					c.Set("department_id", int64(user.Department.ID))
+				} else {
+					c.Set("department_id", nil)
+				}
 				c.Set("staff", common.ToStaffData(user))
 				c.Next()
 				return
@@ -321,6 +326,7 @@ func (m *AuthMiddleware) IsClient() gin.HandlerFunc {
 			if err == nil {
 				c.Set("client_id", orderRoomID)
 				c.Set("client_type", "guest")
+				c.Set("department_id", nil)
 				c.Next()
 				return
 			}

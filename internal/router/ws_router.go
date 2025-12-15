@@ -7,5 +7,6 @@ import (
 )
 
 func WSRouter(rg *gin.RouterGroup, hdl *handler.WSHandler, authMid *middleware.AuthMiddleware) {
-	rg.GET("/ws", authMid.IsClient(), hdl.ServeWS)
+	allowDept := "customer-care"
+	rg.GET("/ws", authMid.IsGuestOrStaffHasDepartment(&allowDept), hdl.ServeWS)
 }

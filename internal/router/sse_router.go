@@ -7,5 +7,5 @@ import (
 )
 
 func SSERouter(rg *gin.RouterGroup, hdl *handler.SSEHandler, authMid *middleware.AuthMiddleware) {
-	rg.GET("/sse", authMid.IsClient(), hdl.ServeSSE)
+	rg.GET("/sse", authMid.IsGuestOrStaffHasDepartment(nil), hdl.ServeSSE)
 }
