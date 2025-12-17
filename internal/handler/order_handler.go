@@ -101,7 +101,9 @@ func (h *OrderHandler) VerifyOrderRoom(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(h.guestName, guestToken, int(ttl.Seconds()), "/", "", false, true)
+	isSecure := c.Request.TLS != nil
+
+	c.SetCookie(h.guestName, guestToken, int(ttl.Seconds()), "/", "", isSecure, true)
 
 	common.ToAPIResponse(c, http.StatusOK, "Order room verification successful", nil)
 }

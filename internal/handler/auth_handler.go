@@ -56,8 +56,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(h.cfg.JWT.AccessName, accessToken, int(h.cfg.JWT.AccessExpiresIn.Seconds()), "/", "", false, true)
-	c.SetCookie(h.cfg.JWT.RefreshName, refreshToken, int(h.cfg.JWT.RefreshExpiresIn.Seconds()), fmt.Sprintf("%s/auth/refresh-token", h.cfg.Server.APIPrefix), "", false, true)
+	isSecure := c.Request.TLS != nil
+
+	c.SetCookie(h.cfg.JWT.AccessName, accessToken, int(h.cfg.JWT.AccessExpiresIn.Seconds()), "/", "", isSecure, true)
+	c.SetCookie(h.cfg.JWT.RefreshName, refreshToken, int(h.cfg.JWT.RefreshExpiresIn.Seconds()), fmt.Sprintf("%s/auth/refresh-token", h.cfg.Server.APIPrefix), "", isSecure, true)
 
 	common.ToAPIResponse(c, http.StatusOK, "Login successfully", gin.H{
 		"user": common.ToUserResponse(user),
@@ -76,8 +78,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Failure      500          {object}  types.APIResponse  "Internal Server Error"
 // @Router       /auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
-	c.SetCookie(h.cfg.JWT.AccessName, "", -1, "/", "", false, true)
-	c.SetCookie(h.cfg.JWT.RefreshName, "", -1, fmt.Sprintf("%s/auth/refresh-token", h.cfg.Server.APIPrefix), "", false, true)
+	isSecure := c.Request.TLS != nil
+
+	c.SetCookie(h.cfg.JWT.AccessName, "", -1, "/", "", isSecure, true)
+	c.SetCookie(h.cfg.JWT.RefreshName, "", -1, fmt.Sprintf("%s/auth/refresh-token", h.cfg.Server.APIPrefix), "", isSecure, true)
 
 	common.ToAPIResponse(c, http.StatusOK, "Logout successfully", nil)
 }
@@ -107,8 +111,10 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(h.cfg.JWT.AccessName, accessToken, int(h.cfg.JWT.AccessExpiresIn.Seconds()), "/", "", false, true)
-	c.SetCookie(h.cfg.JWT.RefreshName, refreshToken, int(h.cfg.JWT.RefreshExpiresIn.Seconds()), fmt.Sprintf("%s/auth/refresh", h.cfg.Server.APIPrefix), "", false, true)
+	isSecure := c.Request.TLS != nil
+
+	c.SetCookie(h.cfg.JWT.AccessName, accessToken, int(h.cfg.JWT.AccessExpiresIn.Seconds()), "/", "", isSecure, true)
+	c.SetCookie(h.cfg.JWT.RefreshName, refreshToken, int(h.cfg.JWT.RefreshExpiresIn.Seconds()), fmt.Sprintf("%s/auth/refresh", h.cfg.Server.APIPrefix), "", isSecure, true)
 
 	common.ToAPIResponse(c, http.StatusOK, "Token refresh successfully", nil)
 }
@@ -185,8 +191,10 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(h.cfg.JWT.AccessName, "", -1, "/", "", false, true)
-	c.SetCookie(h.cfg.JWT.RefreshName, "", -1, fmt.Sprintf("%s/auth/refresh-token", h.cfg.Server.APIPrefix), "", false, true)
+	isSecure := c.Request.TLS != nil
+
+	c.SetCookie(h.cfg.JWT.AccessName, "", -1, "/", "", isSecure, true)
+	c.SetCookie(h.cfg.JWT.RefreshName, "", -1, fmt.Sprintf("%s/auth/refresh-token", h.cfg.Server.APIPrefix), "", isSecure, true)
 
 	common.ToAPIResponse(c, http.StatusOK, "Password changed successfully", nil)
 }
