@@ -16,15 +16,15 @@ FROM alpine:latest
 
 RUN apk add --no-cache ca-certificates tzdata
 
-RUN adduser -D -u 1001 gin
+RUN addgroup -S -g 1001 go && adduser -S -D -u 1001 -G go gin
 
 WORKDIR /app
 
-RUN mkdir -p /app/logs && chown -R 1001:1001 /app
+RUN mkdir -p logs && chown gin:go logs
 
-COPY --from=builder /app/main .
+COPY --from=builder --chown=gin:go /app/main .
 
-COPY --from=builder /app/configs ./configs
+COPY --from=builder --chown=gin:go /app/configs ./configs
 
 USER gin
 
