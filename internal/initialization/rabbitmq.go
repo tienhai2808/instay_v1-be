@@ -13,10 +13,17 @@ type MQ struct {
 }
 
 func InitRabbitMQ(cfg *config.Config) (*MQ, error) {
-	dsn := fmt.Sprintf("amqps://%s:%s@%s/%s",
+	protocol := "amqp"
+	if cfg.RabbitMQ.UseSSL {
+		protocol = protocol + "s"
+	}
+
+	dsn := fmt.Sprintf("%s://%s:%s@%s:%d/%s",
+		protocol,
 		cfg.RabbitMQ.User,
 		cfg.RabbitMQ.Password,
 		cfg.RabbitMQ.Host,
+		cfg.RabbitMQ.Port,
 		cfg.RabbitMQ.Vhost,
 	)
 

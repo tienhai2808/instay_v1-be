@@ -35,13 +35,16 @@ type Config struct {
 		Host     string `mapstructure:"host"`
 		Port     int    `mapstructure:"port"`
 		Password string `mapstructure:"password"`
+		UseSSL   bool   `mapstructure:"use_ssl"`
 	} `mapstructure:"redis"`
 
 	RabbitMQ struct {
 		Host     string `mapstructure:"host"`
+		Port     int    `mapstructure:"port"`
 		User     string `mapstructure:"user"`
 		Password string `mapstructure:"password"`
 		Vhost    string `mapstructure:"vhost"`
+		UseSSL   bool   `mapstructure:"use_ssl"`
 	} `mapstructure:"rabbitmq"`
 
 	PostgreSQL struct {
@@ -55,10 +58,11 @@ type Config struct {
 
 	S3 struct {
 		Bucket          string `mapstructure:"bucket"`
-		Folder          string `mapstructure:"folder"`
 		AccessKeyID     string `mapstructure:"access_key_id"`
 		SecretAccessKey string `mapstructure:"secret_access_key"`
 		Region          string `mapstructure:"region"`
+		UseSSL          bool   `mapstructure:"use_ssl"`
+		Endpoint        string `mapstructure:"endpoint"`
 	} `mapstructure:"s3"`
 
 	SMTP struct {
@@ -88,16 +92,20 @@ func LoadConfig() (*Config, error) {
 	viper.BindEnv("redis.host", "RD_HOST")
 	viper.BindEnv("redis.port", "RD_PORT")
 	viper.BindEnv("redis.password", "RD_PASSWORD")
+	viper.BindEnv("redis.use_ssl", "RD_USE_SSL")
 
 	viper.BindEnv("rabbitmq.host", "RMQ_HOST")
+	viper.BindEnv("rabbitmq.port", "RMQ_PORT")
 	viper.BindEnv("rabbitmq.user", "RMQ_USER")
 	viper.BindEnv("rabbitmq.password", "RMQ_PASSWORD")
 	viper.BindEnv("rabbitmq.vhost", "RMQ_VHOST")
+	viper.BindEnv("rabbitmq.use_ssl", "RMQ_USE_SSL")
 
 	viper.BindEnv("s3.bucket", "S3_BUCKET")
-	viper.BindEnv("s3.folder", "S3_FOLDER")
+	viper.BindEnv("s3.endpoint", "S3_ENDPOINT")
 	viper.BindEnv("s3.access_key_id", "S3_ACCESS_KEY_ID")
 	viper.BindEnv("s3.secret_access_key", "S3_SECRET_ACCESS_KEY")
+	viper.BindEnv("s3.use_ssl", "S3_USE_SSL")
 	viper.BindEnv("s3.region", "S3_REGION")
 
 	viper.BindEnv("smtp.host", "SMTP_HOST")

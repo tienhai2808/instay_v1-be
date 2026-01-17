@@ -42,7 +42,7 @@ func (s *fileSvcImpl) CreateUploadURLs(ctx context.Context, req types.UploadPres
 		name := strings.TrimSuffix(file.FileName, filepath.Ext(file.FileName))
 		ext := filepath.Ext(file.FileName)
 
-		key := fmt.Sprintf("%s/%s-%s%s", s.cfg.S3.Folder, uuid.NewString(), common.GenerateSlug(name), ext)
+		key := fmt.Sprintf("%s-%s%s", uuid.NewString(), common.GenerateSlug(name), ext)
 		presignedRes, err := s.presigner.PresignPutObject(ctx, &s3.PutObjectInput{
 			Bucket:      aws.String(s.cfg.S3.Bucket),
 			Key:         aws.String(key),

@@ -1,5 +1,5 @@
 main.yml
-.env
+.env*
 tmp
 logs
 https

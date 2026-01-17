@@ -108,6 +108,9 @@ func NewServer(cfg *config.Config) (*Server, error) {
 	router.SSERouter(api, ctn.SSECtn.Hdl, ctn.AuthMid)
 	router.WSRouter(api, ctn.WSCtn.Hdl, ctn.AuthMid)
 
+	api.GET("/healthcheck", func(c *gin.Context) {
+		c.JSON(http.StatusOK, "Service healthy")
+	})
 	api.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	addr := fmt.Sprintf(":%d", cfg.Server.Port)

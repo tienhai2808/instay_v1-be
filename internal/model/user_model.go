@@ -17,8 +17,6 @@ type User struct {
 	DepartmentID *int64    `gorm:"type:bigint" json:"department_id"`
 
 	Department           *Department          `gorm:"foreignKey:DepartmentID;references:ID;constraint:fk_users_department,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"department"`
-	DepartmentsCreated   []*Department        `gorm:"foreignKey:CreatedByID;references:ID;constraint:fk_departments_created_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"departments_created"`
-	DepartmentsUpdated   []*Department        `gorm:"foreignKey:UpdatedByID;references:ID;constraint:fk_departments_updated_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"departments_updated"`
 	ServiceTypesCreated  []*ServiceType       `gorm:"foreignKey:CreatedByID;references:ID;constraint:fk_service_types_created_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"service_types_created"`
 	ServiceTypesUpdated  []*ServiceType       `gorm:"foreignKey:UpdatedByID;references:ID;constraint:fk_service_types_updated_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"service_types_updated"`
 	RequestTypesCreated  []*RequestType       `gorm:"foreignKey:CreatedByID;references:ID;constraint:fk_request_types_created_by,OnUpdate:CASCADE,OnDelete:RESTRICT" json:"request_types_created"`

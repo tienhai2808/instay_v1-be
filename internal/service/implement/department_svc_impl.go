@@ -43,8 +43,8 @@ func (s *departmentSvcImpl) CreateDepartment(ctx context.Context, userID int64, 
 		Name:        common.GenerateSlug(req.Name),
 		DisplayName: req.DisplayName,
 		Description: req.Description,
-		CreatedByID: userID,
-		UpdatedByID: userID,
+		CreatedByID: &userID,
+		UpdatedByID: &userID,
 	}
 
 	if err = s.departmentRepo.Create(ctx, department); err != nil {
