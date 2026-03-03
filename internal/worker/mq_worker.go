@@ -3,18 +3,15 @@ package worker
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 
+	"cloud.google.com/go/storage"
 	"github.com/InstaySystem/is_v1-be/internal/common"
 	"github.com/InstaySystem/is_v1-be/internal/config"
 	"github.com/InstaySystem/is_v1-be/internal/hub"
 	"github.com/InstaySystem/is_v1-be/internal/provider/mq"
 	"github.com/InstaySystem/is_v1-be/internal/provider/smtp"
 	"github.com/InstaySystem/is_v1-be/internal/types"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awsS3 "github.com/aws/aws-sdk-go-v2/service/s3"
-	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"go.uber.org/zap"
 )
 
@@ -22,7 +19,7 @@ type MQWorker struct {
 	cfg    *config.Config
 	mq     mq.MessageQueueProvider
 	smtp   smtp.SMTPProvider
-	s3     *awsS3.Client
+	gcs    *storage.Client
 	logger *zap.Logger
 	sseHub *hub.SSEHub
 }
@@ -31,7 +28,7 @@ func NewMQWorker(
 	cfg *config.Config,
 	mq mq.MessageQueueProvider,
 	smtp smtp.SMTPProvider,
-	s3 *awsS3.Client,
+	gcs *storage.Client,
 	logger *zap.Logger,
 	sseHub *hub.SSEHub,
 ) *MQWorker {
@@ -39,7 +36,7 @@ func NewMQWorker(
 		cfg,
 		mq,
 		smtp,
-		s3,
+		gcs,
 		logger,
 		sseHub,
 	}
@@ -76,21 +73,20 @@ func (w *MQWorker) startDeleteFile() {
 
 		ctx := context.Background()
 
-		if _, err := w.s3.HeadObject(ctx, &awsS3.HeadObjectInput{
-			Bucket: aws.String(w.cfg.S3.Bucket),
-			Key:    aws.String(key),
-		}); err != nil {
-			var keyNotFound *s3Types.NotFound
-			if !errors.As(err, &keyNotFound) {
-				w.logger.Error("file check failed", zap.Error(err))
+		obj := w.gcs.Bucket(w.cfg.GCS.Bucket).Object(key)
+
+		if _, err := obj.Attrs(ctx); err != nil {
+			if err == storage.ErrObjectNotExist {
+				w.logger.Warn("file not found", zap.String("key", key))
+				return nil
 			}
+			w.logger.Error("file check failed", zap.Error(err))
+			return err
 		}
 
-		if _, err := w.s3.DeleteObject(ctx, &awsS3.DeleteObjectInput{
-			Bucket: aws.String(w.cfg.S3.Bucket),
-			Key:    aws.String(key),
-		}); err != nil {
+		if err := obj.Delete(ctx); err != nil {
 			w.logger.Error("file delete failed", zap.Error(err))
+			return err
 		}
 
 		return nil

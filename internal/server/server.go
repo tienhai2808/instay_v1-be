@@ -9,6 +9,7 @@ import (
 	"syscall"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/InstaySystem/is_v1-be/internal/config"
 	"github.com/InstaySystem/is_v1-be/internal/container"
 	"github.com/InstaySystem/is_v1-be/internal/initialization"
@@ -30,6 +31,7 @@ type Server struct {
 	db           *initialization.DB
 	rdb          *redis.Client
 	rmq          *amqp091.Connection
+	gcs          *storage.Client
 	listenWorker *worker.ListenWorker
 	logger       *zap.Logger
 }
@@ -50,7 +52,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	s3, err := initialization.InitS3(cfg)
+	gcs, err := initialization.InitGCS(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -65,14 +67,14 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		return nil, err
 	}
 
-	ctn := container.NewContainer(cfg, db.Gorm, rdb, s3, sf, logger, rmq)
+	ctn := container.NewContainer(cfg, db.Gorm, rdb, gcs, sf, logger, rmq)
 
 	seed := seed.NewSeed(cfg, ctn.UserRepo, logger, ctn.BHash, ctn.SfGen)
 	if err = seed.AdminSeed(); err != nil {
 		return nil, err
 	}
 
-	mqWorker := worker.NewMQWorker(cfg, ctn.MQProvider, ctn.SMTPProvider, s3.Client, logger, ctn.SSEHub)
+	mqWorker := worker.NewMQWorker(cfg, ctn.MQProvider, ctn.SMTPProvider, gcs, logger, ctn.SSEHub)
 	mqWorker.Start()
 
 	listenWorker := worker.NewListenWorker(cfg, ctn.BookingRepo, ctn.SfGen, logger)
@@ -137,6 +139,7 @@ func NewServer(cfg *config.Config) (*Server, error) {
 		db,
 		rdb,
 		rmq,
+		gcs,
 		listenWorker,
 		logger,
 	}, nil
@@ -161,6 +164,10 @@ func (s *Server) Shutdown(ctx context.Context) {
 
 	if s.rmq != nil {
 		s.rmq.Close()
+	}
+
+	if s.gcs != nil {
+		s.gcs.Close()
 	}
 
 	if s.logger != nil {

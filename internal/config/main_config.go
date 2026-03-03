@@ -56,15 +56,9 @@ type Config struct {
 		DBName   string `mapstructure:"db_name"`
 	} `mapstructure:"postgresql"`
 
-	S3 struct {
-		Bucket          string `mapstructure:"bucket"`
-		AccessKeyID     string `mapstructure:"access_key_id"`
-		SecretAccessKey string `mapstructure:"secret_access_key"`
-		Region          string `mapstructure:"region"`
-		UseSSL          bool   `mapstructure:"use_ssl"`
-		Endpoint        string `mapstructure:"endpoint"`
-		PublicDomain    string `mapstructure:"public_domain"`
-	} `mapstructure:"s3"`
+	GCS struct {
+		Bucket string `mapstructure:"bucket"`
+	} `mapstructure:"gcs"`
 
 	SMTP struct {
 		Host     string `mapstructure:"host"`
@@ -108,13 +102,7 @@ func LoadConfig() (*Config, error) {
 	viper.BindEnv("rabbitmq.vhost", "RMQ_VHOST")
 	viper.BindEnv("rabbitmq.use_ssl", "RMQ_USE_SSL")
 
-	viper.BindEnv("s3.bucket", "S3_BUCKET")
-	viper.BindEnv("s3.endpoint", "S3_ENDPOINT")
-	viper.BindEnv("s3.access_key_id", "S3_ACCESS_KEY_ID")
-	viper.BindEnv("s3.secret_access_key", "S3_SECRET_ACCESS_KEY")
-	viper.BindEnv("s3.use_ssl", "S3_USE_SSL")
-	viper.BindEnv("s3.region", "S3_REGION")
-	viper.BindEnv("s3.public_domain", "S3_PUBLIC_DOMAIN")
+	viper.BindEnv("gcs.bucket", "GCS_BUCKET")
 
 	viper.BindEnv("smtp.host", "SMTP_HOST")
 	viper.BindEnv("smtp.port", "SMTP_PORT")

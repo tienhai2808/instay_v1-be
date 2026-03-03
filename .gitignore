@@ -1,5 +1,6 @@
 main.yml
 .env*
-tmp
-logs
-https
+tmp/
+logs/
+https/
+gcs.json

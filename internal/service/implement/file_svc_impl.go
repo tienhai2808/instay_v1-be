@@ -7,27 +7,24 @@ import (
 	"strings"
 	"time"
 
+	"cloud.google.com/go/storage"
 	"github.com/InstaySystem/is_v1-be/internal/common"
 	"github.com/InstaySystem/is_v1-be/internal/config"
 	"github.com/InstaySystem/is_v1-be/internal/service"
 	"github.com/InstaySystem/is_v1-be/internal/types"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
 type fileSvcImpl struct {
-	client    *s3.Client
-	presigner *s3.PresignClient
-	cfg       *config.Config
-	logger    *zap.Logger
+	client *storage.Client
+	cfg    *config.Config
+	logger *zap.Logger
 }
 
-func NewFileService(client *s3.Client, presigner *s3.PresignClient, cfg *config.Config, logger *zap.Logger) service.FileService {
+func NewFileService(client *storage.Client, cfg *config.Config, logger *zap.Logger) service.FileService {
 	return &fileSvcImpl{
 		client,
-		presigner,
 		cfg,
 		logger,
 	}
@@ -41,21 +38,24 @@ func (s *fileSvcImpl) CreateUploadURLs(ctx context.Context, req types.UploadPres
 		ext := filepath.Ext(file.FileName)
 
 		key := fmt.Sprintf("%s-%s%s", uuid.NewString(), common.GenerateSlug(name), ext)
-		presignedRes, err := s.presigner.PresignPutObject(ctx, &s3.PutObjectInput{
-			Bucket:      aws.String(s.cfg.S3.Bucket),
-			Key:         aws.String(key),
-			ContentType: aws.String(file.ContentType),
-		}, func(opts *s3.PresignOptions) {
-			opts.Expires = 15 * time.Minute
-		})
+
+		url, err := s.client.Bucket(s.cfg.GCS.Bucket).SignedURL(
+			key,
+			&storage.SignedURLOptions{
+				Method:      "PUT",
+				Expires:     time.Now().Add(15 * time.Minute),
+				ContentType: file.ContentType,
+				Scheme:      storage.SigningSchemeV4,
+			},
+		)
 		if err != nil {
-			s.logger.Error("generate upload presigned URL failed", zap.String("content_type", file.ContentType), zap.Error(err))
+			s.logger.Error("generate upload signed URL failed", zap.Error(err))
 			return nil, err
 		}
 
 		result = append(result, &types.UploadPresignedURLResponse{
 			Key: key,
-			Url: presignedRes.URL,
+			Url: url,
 		})
 	}
 
@@ -66,19 +66,21 @@ func (s *fileSvcImpl) CreateViewURLs(ctx context.Context, req types.ViewPresigne
 	result := make([]*types.ViewPresignedURLResponse, 0, len(req.Keys))
 
 	for _, key := range req.Keys {
-		presignedReq, err := s.presigner.PresignGetObject(ctx, &s3.GetObjectInput{
-			Bucket: aws.String(s.cfg.S3.Bucket),
-			Key:    aws.String(key),
-		}, func(opts *s3.PresignOptions) {
-			opts.Expires = 15 * time.Minute
-		})
+		url, err := s.client.Bucket(s.cfg.GCS.Bucket).SignedURL(
+			key,
+			&storage.SignedURLOptions{
+				Method:  "GET",
+				Expires: time.Now().Add(15 * time.Minute),
+				Scheme:  storage.SigningSchemeV4,
+			},
+		)
 		if err != nil {
-			s.logger.Error("generate view presigned URL failed", zap.Error(err))
+			s.logger.Error("generate view signed URL failed", zap.Error(err))
 			return nil, err
 		}
 
 		result = append(result, &types.ViewPresignedURLResponse{
-			Url: presignedReq.URL,
+			Url: url,
 		})
 	}
 

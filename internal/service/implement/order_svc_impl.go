@@ -159,7 +159,7 @@ func (s *orderSvcImpl) CreateOrderRoom(ctx context.Context, userID int64, req ty
 	bytes, _ := json.Marshal(orderData)
 
 	redisKey := fmt.Sprintf("instay:order-room:%s", secretCode)
-	ttl := booking.CheckOut.Sub(time.Now())
+	ttl := time.Until(booking.CheckOut)
 
 	if err = s.cacheProvider.SetObject(ctx, redisKey, bytes, ttl); err != nil {
 		s.logger.Error("save order room data failed", zap.Error(err))
@@ -199,7 +199,7 @@ func (s *orderSvcImpl) VerifyOrderRoom(ctx context.Context, secretCode string) (
 		return "", 0, err
 	}
 
-	ttl := orderRoomData.ExpiredAt.Sub(time.Now())
+	ttl := time.Until(orderRoomData.ExpiredAt)
 
 	guestToken, err := s.jwtProvider.GenerateGuestToken(orderRoomData.ID, ttl)
 	if err != nil {

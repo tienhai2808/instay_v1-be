@@ -1,9 +1,9 @@
 package container
 
 import (
+	"cloud.google.com/go/storage"
 	"github.com/InstaySystem/is_v1-be/internal/config"
 	"github.com/InstaySystem/is_v1-be/internal/hub"
-	"github.com/InstaySystem/is_v1-be/internal/initialization"
 	"github.com/InstaySystem/is_v1-be/internal/middleware"
 	"github.com/InstaySystem/is_v1-be/internal/provider/cache"
 	"github.com/InstaySystem/is_v1-be/internal/provider/jwt"
@@ -52,7 +52,7 @@ func NewContainer(
 	cfg *config.Config,
 	db *gorm.DB,
 	rdb *redis.Client,
-	s3 *initialization.S3,
+	gcs *storage.Client,
 	sf *sonyflake.Sonyflake,
 	logger *zap.Logger,
 	rmq *amqp091.Connection,
@@ -76,7 +76,7 @@ func NewContainer(
 	chatRepo := repoImpl.NewChatRepository(db)
 	reviewRepo := repoImpl.NewReviewRepository(db)
 
-	fileCtn := NewFileContainer(cfg, s3, logger)
+	fileCtn := NewFileContainer(cfg, gcs, logger)
 	authCtn := NewAuthContainer(cfg, db, userRepo, logger, bHash, jwtProvider, cacheProvider, mqProvider)
 	userCtn := NewUserContainer(userRepo, sfGen, logger, bHash, cfg.JWT.RefreshExpiresIn, cacheProvider)
 	departmentCtn := NewDepartmentContainer(departmentRepo, sfGen, logger)
